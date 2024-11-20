@@ -8,6 +8,7 @@ import {
   TableRow,
   Paper,
   IconButton,
+  CircularProgress,
   
 } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
@@ -26,7 +27,7 @@ const ListOfLeads: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [leadSourceFilter, setLeadSourceFilter] = useState<string>("");
- 
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [priorityFilter, _setPriorityFilter] = useState<string>("");
   const [sortField, setSortField] = useState<keyof Lead>("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -73,6 +74,7 @@ useEffect(() => {
   fetchCategories();
 }, [searchQuery, statusFilter, leadSourceFilter, priorityFilter, sortField, sortOrder]);
 const fetchCategories = async () => {
+  
   try {
     const response = await axios.get( `${import.meta.env.VITE_BACKEND_URL}/leadcategory`);
     setCategories(response.data.data);
@@ -82,6 +84,7 @@ const fetchCategories = async () => {
   }
 };
 const fetchData = async () => {
+  setIsLoading(true);
   try {
     const params = {
       search: searchQuery,
@@ -96,8 +99,11 @@ const fetchData = async () => {
     });
 
     setLeads(response.data.data);
+    
   } catch (error) {
     console.error("Error fetching leads:", error);
+  }finally {
+    setIsLoading(false); // Stop loading
   }
 };
 const toggleBulkModal = () => {
@@ -298,6 +304,7 @@ const handleBulkUpdateSubmit = async ( leadIds: string[],selectedCategories: str
         {/* Min Price Filter */}
         
       </div>
+      
 
       {/* Table */}
       <TableContainer component={Paper} style={{
@@ -346,46 +353,58 @@ const handleBulkUpdateSubmit = async ( leadIds: string[],selectedCategories: str
   </TableRow>
 </TableHead>
 
+{isLoading ? (
+  // Show loader in the middle of the table
+  <TableRow>
+    <TableCell colSpan={9} style={{ textAlign: "center", padding: "20px" }}>
+      <CircularProgress style={{ color: "black" }} />
+    </TableCell>
+  </TableRow>
+) : (
+  // Render table content when not loading
+  <TableBody>
+    {paginatedLeads.map((lead) => (
+      <TableRow key={lead.id}>
+        <TableCell>{lead.leadId}</TableCell>
+        <TableCell>{lead.name}</TableCell>
+        <TableCell>{lead.status}</TableCell>
+        <TableCell>{lead.manager}</TableCell>
+        <TableCell>{lead.phoneNumber}</TableCell>
+        <TableCell>{lead.leadSource}</TableCell>
+        <TableCell>${lead.budget.toLocaleString()}</TableCell>
+        <TableCell>{lead.lastFollowUp.slice(0, 10)}</TableCell>
+        <TableCell>
+          <IconButton
+            style={{
+              backgroundColor: "black",
+              color: "white",
+              padding: "10px",
+              borderRadius: "8px",
+              boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
+              fontSize: "14px",
+            }}
+            onClick={() => openModal((lead._id!))}
+          >
+            Send SMS
+          </IconButton>
+          <IconButton
+            style={{ color: "black" }}
+            onClick={() => navigate(`/leads/add/${lead._id}`)}
+          >
+            <Edit />
+          </IconButton>
+          <IconButton
+            style={{ color: "red" }}
+            onClick={() => handleDelete((lead._id!))}
+          >
+            <Delete />
+          </IconButton>
+        </TableCell>
+      </TableRow>
+    ))}
+  </TableBody>
+)}
 
-          <TableBody>
-            {paginatedLeads.map((lead) => (
-              <TableRow key={lead.id}>
-               
-                <TableCell>{lead.leadId}</TableCell>
-                <TableCell>{lead.name}</TableCell>
-                <TableCell>{lead.status}</TableCell>
-                <TableCell>{lead.manager}</TableCell>
-                <TableCell>{lead.phoneNumber}</TableCell>
-                <TableCell>{lead.leadSource}</TableCell>
-                <TableCell>${lead.budget.toLocaleString()}</TableCell>
-                <TableCell>{lead.lastFollowUp.slice(0,10)}</TableCell>
-                <TableCell>
-                <IconButton
-  style={{
-    backgroundColor: "black",
-    color: "white",
-    padding: "10px", // Adjust padding for a box-like appearance
-    borderRadius: "8px", // Slightly rounded corners
-    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)", // Add a subtle shadow
-    fontSize: "14px", // Text size for "Send SMS"
-  }}
-  onClick={() => openModal((lead._id!))}
->
-  Send SMS
-</IconButton>
-                  <IconButton  style={{ color: "black" }}  onClick={() => navigate(`/leads/add/${lead._id}`)}>
-                    <Edit />
-                  </IconButton>
-                  <IconButton style={{ color: "red" }} onClick={() => handleDelete((lead._id!))}>
-                    <Delete />
-                  </IconButton>
-               
-
-                </TableCell>
-            
-              </TableRow>
-            ))}
-          </TableBody>
         </Table>
       </TableContainer>
       <CustomModal
