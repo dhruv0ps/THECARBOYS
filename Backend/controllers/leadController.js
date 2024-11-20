@@ -92,4 +92,22 @@ const deleteLead = async (req, res) => {
         res.status(500).json({ error: error.message || "Failed to delete lead" });
     }
 };
-module.exports = { createLead,getAllLeads,getSinglelead ,updateLead, deleteLead};
+
+const bulkupdates = async(req,res) => {
+    try{
+        const { leadIds, categories } = req.body;
+
+        if (!leadIds || !categories) {
+          return res.status(400).json({ error: "Lead IDs and categories are required" });
+        }
+        
+        const result = await LeadService.bulkupdates(leadIds,categories);
+        res.status(201).json({ success: true, data: result });
+
+    }
+    catch (error) {
+    console.error("Error in bulk update:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+}
+module.exports = { createLead,getAllLeads,getSinglelead ,updateLead, deleteLead,bulkupdates};

@@ -8,7 +8,7 @@ import {
   TableRow,
   Paper,
   IconButton,
- 
+  
 } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
 import axios from "axios";
@@ -18,62 +18,111 @@ import showConfirmationModal from "../../components/confirmationUtil";
 import { toast } from "react-toastify";
 import { FaChevronLeft } from "react-icons/fa";
 import { ArrowDropUp, ArrowDropDown } from "@mui/icons-material";
-type Lead = {
-  leadId?: string;
-  id?: string;
-  status: string;
-  month: string;
-  manager: string;
-  name: string;
-  phoneNumber: string;
-  leadSource: string;
-  budget: number;
-  paymentPlan: string;
-  lastFollowUp: string;
-  nextFollowUp: string;
-  createdDate: string;
-  updatedDate: string;
-  priorityLevel: string;
-  _id? : string
-};
-
+import CustomModal from "../../components/CustomModal";
+import BulkUpdateModal from "../../components/BulkUpdateModal";
+import { Lead } from "../../models/Lead";
 const ListOfLeads: React.FC = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [leadSourceFilter, setLeadSourceFilter] = useState<string>("");
-  const [minPrice, _setMinPrice] = useState<number | "">("");
-  const [maxPrice, _setMaxPrice] = useState<number | "">("");
+ 
   const [priorityFilter, _setPriorityFilter] = useState<string>("");
   const [sortField, setSortField] = useState<keyof Lead>("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 20;
+  
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState<boolean>(false); // Bulk Modal state
+  const [categories, setCategories] = useState<any[]>([]); 
 const navigate = useNavigate();
+const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
 
-  useEffect(() => {
-    
+const openModal = (leadId: string) => {
+  setSelectedLeadId(leadId);
+  setIsModalOpen(true);
+};
 
-    fetchData();
-  }, []);
-  const fetchData = async () => {
-    try {
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/leads`);
-      const fetchedLeads = response.data.data;
-  
-      // Sort by createdDate in descending order
-      const sortedLeads = fetchedLeads.sort((a: { createdDate?: string }, b: { createdDate?: string }) => {
-        const dateA = a.createdDate ? new Date(a.createdDate).getTime() : 0; // Default to 0 if createdDate is missing
-        const dateB = b.createdDate ? new Date(b.createdDate).getTime() : 0; // Default to 0 if createdDate is missing
-        return dateB - dateA;
-      });
-  
-      setLeads(sortedLeads);
-    } catch (error) {
-      console.error("Error fetching leads:", error);
+const closeModal = () => {
+  setIsModalOpen(false);
+  setSelectedLeadId(null);
+};
+
+const handleSendSMS = async (message: string) => {
+  if (!selectedLeadId) return;
+
+  try {
+    const response = await axios.post(
+      `${import.meta.env.VITE_BACKEND_URL}/send-sms/${selectedLeadId}`,
+      { message }
+    );
+
+    if (response.status === 201) {
+      toast.success("SMS sent successfully!");
+    } else {
+      toast.error("Failed to send SMS. Please try again.");
     }
-  };
+  } catch (error) {
+    console.error("Error sending SMS:", error);
+    toast.error("Failed to send SMS. Please check the details and try again.");
+  }
+};
+useEffect(() => {
+  fetchData();
+  fetchCategories();
+}, [searchQuery, statusFilter, leadSourceFilter, priorityFilter, sortField, sortOrder]);
+const fetchCategories = async () => {
+  try {
+    const response = await axios.get( `${import.meta.env.VITE_BACKEND_URL}/leadcategory`);
+    setCategories(response.data.data);
+    console.log(categories);
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+  }
+};
+const fetchData = async () => {
+  try {
+    const params = {
+      search: searchQuery,
+      status: statusFilter,
+      leadSource: leadSourceFilter,
+      priority: priorityFilter,
+      sortField,
+      sortOrder,
+    };
+    const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/leads`, {
+      params,
+    });
+
+    setLeads(response.data.data);
+  } catch (error) {
+    console.error("Error fetching leads:", error);
+  }
+};
+const toggleBulkModal = () => {
+  setIsBulkModalOpen(!isBulkModalOpen);
+};
   
+
+
+const handleBulkUpdateSubmit = async ( leadIds: string[],selectedCategories: string[]) => {
+  console.log(selectedCategories);
+  try {
+    const response = await axios.patch(`${import.meta.env.VITE_BACKEND_URL}/leads/bulk-update`, {
+      leadIds: leadIds,
+      categories: selectedCategories,
+    });
+    if (response.status === 201) {
+      toast.success("Bulk update successful!");
+      fetchData(); // Refresh data after update
+    }
+  } catch (error) {
+    console.error("Error during bulk update:", error);
+    toast.error("Bulk update failed!");
+  }
+};
+
   
 
   const handleSort = (field: keyof Lead) => {
@@ -97,21 +146,7 @@ const navigate = useNavigate();
 
   // Filter, sort, and paginate leads data locally
   const filteredLeads = leads
-    .filter((lead) => {
-      const matchesStatus = statusFilter ? lead.status === statusFilter : true;
-      const matchesLeadSource = leadSourceFilter ? lead.leadSource === leadSourceFilter : true;
-      const matchesMinPrice = minPrice !== "" ? lead.budget >= minPrice : true;
-      const matchesMaxPrice = maxPrice !== "" ? lead.budget <= maxPrice : true;
-      const matchesPriority = priorityFilter ? lead.priorityLevel === priorityFilter : true;
-      const matchesSearchQuery = searchQuery
-        ? lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          lead.manager.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          lead.leadId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          lead.phoneNumber.trim().includes(searchQuery.trim())
-        : true;
-
-      return matchesStatus && matchesLeadSource && matchesMinPrice && matchesMaxPrice && matchesPriority && matchesSearchQuery;
-    })
+  
     .sort((a, b) => {
       const aField = sortField === "lastFollowUp" ? new Date(a.lastFollowUp) : a[sortField] as string | number;
       const bField = sortField === "lastFollowUp" ? new Date(b.lastFollowUp) : b[sortField] as string | number;
@@ -140,6 +175,8 @@ const navigate = useNavigate();
       toast.error("Failed to delete the lead. Please try again.");
     }
   };
+ 
+  
   const getSortIcon = (field: keyof Lead) => {
     if (sortField === field) {
       // Show the active arrow for the sorted column
@@ -150,7 +187,8 @@ const navigate = useNavigate();
   };
   
   return (
-    <div style={{ padding: "20px" }}>
+    <div style={{ padding: "20px",  overflowX: "auto", // Enables horizontal scrolling for the whole page
+       }}>
           <div className="flex items-center justify-between mb-4">
       {/* Back Button */}
       <button
@@ -162,12 +200,21 @@ const navigate = useNavigate();
       </button>
 
       {/* Add New Lead Button */}
-      <button
-        onClick={() => navigate("/leads/add")}
-        className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
-      >
-        Add New Lead
-      </button>
+      <div className="flex  gap-4 ">
+  <button
+    onClick={() => navigate("/leads/add")}
+    className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
+  >
+    Add New Lead
+  </button>
+  <button
+    onClick={toggleBulkModal}
+    className="px-4 py-2 bg-black text-white rounded-md"
+  >
+    Bulk Update
+  </button>
+</div>
+
     </div>
       <h2 className="text-3xl flex justify-center" style={{ marginBottom: "20px" }}>List of Leads</h2>
 
@@ -253,11 +300,15 @@ const navigate = useNavigate();
       </div>
 
       {/* Table */}
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} style={{
+    
+    whiteSpace: "nowrap", // Prevent table content from wrapping
+  }}>
         <Table>
        
 
         <TableHead>
+       
   <TableRow style={{ backgroundColor: "black", color: "white" }}>
     {/* ID Header with Sort Arrow */}
     <TableCell
@@ -299,6 +350,7 @@ const navigate = useNavigate();
           <TableBody>
             {paginatedLeads.map((lead) => (
               <TableRow key={lead.id}>
+               
                 <TableCell>{lead.leadId}</TableCell>
                 <TableCell>{lead.name}</TableCell>
                 <TableCell>{lead.status}</TableCell>
@@ -308,13 +360,27 @@ const navigate = useNavigate();
                 <TableCell>${lead.budget.toLocaleString()}</TableCell>
                 <TableCell>{lead.lastFollowUp.slice(0,10)}</TableCell>
                 <TableCell>
+                <IconButton
+  style={{
+    backgroundColor: "black",
+    color: "white",
+    padding: "10px", // Adjust padding for a box-like appearance
+    borderRadius: "8px", // Slightly rounded corners
+    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)", // Add a subtle shadow
+    fontSize: "14px", // Text size for "Send SMS"
+  }}
+  onClick={() => openModal((lead._id!))}
+>
+  Send SMS
+</IconButton>
                   <IconButton  style={{ color: "black" }}  onClick={() => navigate(`/leads/add/${lead._id}`)}>
                     <Edit />
                   </IconButton>
                   <IconButton style={{ color: "red" }} onClick={() => handleDelete((lead._id!))}>
                     <Delete />
                   </IconButton>
-                 
+               
+
                 </TableCell>
             
               </TableRow>
@@ -322,7 +388,22 @@ const navigate = useNavigate();
           </TableBody>
         </Table>
       </TableContainer>
-
+      <CustomModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onSubmit={handleSendSMS}
+        title="Send Custom SMS"
+        label="Enter your custom message"
+      />
+       {isBulkModalOpen && (
+        <BulkUpdateModal
+          isOpen={isBulkModalOpen}
+          onClose={toggleBulkModal}
+          leads={leads}
+          categories={categories}
+          onSubmit={handleBulkUpdateSubmit}
+        />
+      )}
       {/* Pagination */}
       {/* <Pagination
         count={totalPages}

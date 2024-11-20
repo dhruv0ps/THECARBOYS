@@ -3,6 +3,7 @@ const Counter = require("../config/models/counterModel");
 const { model } = require("mongoose");
 const { search } = require("../routes");
 const Leadcategory = require("../config/models/leadCategoryModel");
+const twilioService = require("../services/twilioService");
 
 const getNextLead = async() => {
     const counter = await Counter.findOneAndUpdate(
@@ -43,7 +44,14 @@ const createLead = async(leadData) => {
 
         const newLead = new Lead({ ...leadData,leadId});
         const saveLead = await newLead.save();
-        
+        if (saveLead.phoneNumber) {
+          const message = `Hi ${saveLead.name}, thank you for your interest! Our team will contact you shortly. Your reference ID is ${saveLead.leadId}.`;
+          
+          // Use Twilio or your SMS service to send the message
+          await twilioService.sendSMS(saveLead.phoneNumber, message);
+        }
+    
+      
         return saveLead;
 
     }
@@ -64,7 +72,7 @@ const getAllLeads = async ({filters,search,sortBy}) => {
 
         if(search) {
             query.$or = [
-                {name : {$regex : search ,$option : "i"}},
+                {name : {$regex : search ,$options : "i"}},
                 { email: { $regex: search, $options: 'i' } },
                 { phoneNumber: { $regex: search, $options: 'i' } },
                 {leadId : {$regex : search, $options : 'i'}}
@@ -172,4 +180,53 @@ const deleteLead = async (_id) => {
     }
 };
 
-module.exports = { createLead, getAllLeads,getSingleId, updateLead, deleteLead };
+const bulkupdates = async (leadIds, categories) => {
+  try {
+    // Validate lead IDs
+    if (!Array.isArray(leadIds) || leadIds.length === 0) {
+      throw new Error("Lead IDs must be a non-empty array");
+    }
+
+    // Validate categories
+    if (!Array.isArray(categories) || categories.length === 0) {
+      throw new Error("Categories must be a non-empty array");
+    }
+
+    // Fetch categories and validate them
+    const validCategories = await Leadcategory.find({
+      _id: { $in: categories },
+    });
+
+    if (validCategories.length !== categories.length) {
+      const invalidCategories = categories.filter(
+        (category) =>
+          !validCategories.some((validCat) => validCat.leadcategory === category)
+      );
+      throw new Error(`Invalid categories: ${invalidCategories.join(", ")}`);
+    }
+
+    // Map valid categories to ObjectIds
+    // const categoryIds = validCategories.map((category) => category._id);
+
+    // Perform bulk update
+    const updatedLeads = await Lead.updateMany(
+      { _id: { $in: leadIds } },
+      { $set: { leadcategory: validCategories } }
+    );
+
+    if (updatedLeads.matchedCount === 0) {
+      throw new Error("No leads found to update");
+    }
+
+    return {
+      message: "Bulk update successful",
+      matchedCount: updatedLeads.matchedCount,
+      modifiedCount: updatedLeads.modifiedCount,
+    };
+  } catch (error) {
+    console.error("Error in bulkupdates:", error);
+    throw new Error("Failed to perform bulk update");
+  }
+};
+
+module.exports = { createLead, getAllLeads,getSingleId, updateLead, deleteLead,bulkupdates };
