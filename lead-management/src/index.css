@@ -1,0 +1,14 @@
+/* index.css (or App.css) */
+
+/* Import Flowbite at the top */
+    
+
+/* Tailwind CSS base, components, and utilities */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import PrimeReact themes and styles after Tailwind if needed */
+
+
+/* Your custom styles can go here */

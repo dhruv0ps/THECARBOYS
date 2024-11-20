@@ -1,0 +1,65 @@
+.nav-sidebar {
+    margin-top: 1rem;
+    height: calc(100vh - 4rem);
+    width: 100%;
+    max-width: 18rem;
+    margin-left: 10px;
+    border-right: 1px solid #e5e7eb; /* Gray-200 */
+    background-color: white;
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); /* shadow-lg */
+    border-radius: 0.75rem 0.75rem 0 0; /* rounded-t-xl */
+}
+
+.nav-sidebar .sidebar-logo {
+    padding-left: 1rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.25rem;
+    font-size: 1.125rem; /* text-lg */
+    font-weight: bold;
+    color: #1f2937; /* Gray-800 */
+}
+
+.nav-sidebar .sidebar-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #374151; /* Gray-700 */
+    transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out; /* smoother transition */
+}
+
+.nav-sidebar .sidebar-item:hover {
+    background-color: gray-200; /* Gray-100 */
+}
+
+.nav-sidebar .sidebar-item-active {
+    background-color: black; /* Active background */
+    color: white; /* Active text color */
+    font-weight: bold; /* font-semibold */
+}
+
+.nav-sidebar .collapse-icon {
+    height: 1.5rem;
+    width: 1.5rem;
+    color: #9ca3af; /* Gray-400 */
+    transition: color 0.3s ease-in-out; /* smoother transition */
+}
+
+.nav-sidebar .collapse-icon:hover {
+    color: #4b5563; /* Gray-600 */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .nav-sidebar {
+        max-width: 100%; /* Take full width on small screens */
+        margin-left: 0; /* Remove left margin */
+        border-right: none; /* Remove right border */
+        border-radius: none; /* Remove rounded corners */
+        box-shadow: none; /* Remove shadow for mobile view */
+    }
+}
+  
