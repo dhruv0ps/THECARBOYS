@@ -71,12 +71,14 @@ const getAllLeads = async ({filters,search,sortBy}) => {
         if (filters.leadSource) query.leadSource = filters.leadSource;
 
         if(search) {
-            query.$or = [
-                {name : {$regex : search ,$options : "i"}},
-                { email: { $regex: search, $options: 'i' } },
-                { phoneNumber: { $regex: search, $options: 'i' } },
-                {leadId : {$regex : search, $options : 'i'}}
-            ]
+          const escapedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+          query.$or = [
+              { name: { $regex: escapedSearch, $options: "i" } },
+              { email: { $regex: escapedSearch, $options: "i" } },
+              { phoneNumber: { $regex: escapedSearch, $options: "i" } },
+              { leadId: { $regex: escapedSearch, $options: "i" } }
+          ];
         }
 
         const sortCriteria = {};
