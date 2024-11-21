@@ -280,6 +280,7 @@ const LeadForm: React.FC = () => {
 
         </div>
         <div className="space-y-2 col-span-full">
+          <Label htmlFor="lead categories">Lead Categoreis</Label>
         <ObjectMultiSelectDropdown
   options={leadCategories.map((category: any) => ({
     value: category._id, // Use the _id for selection

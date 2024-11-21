@@ -9,6 +9,7 @@ import {
   Paper,
   IconButton,
   CircularProgress,
+  Checkbox
   
 } from "@mui/material";
 import { Edit, Delete } from "@mui/icons-material";
@@ -33,13 +34,13 @@ const ListOfLeads: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 20;
-  
-  const [isBulkModalOpen, setIsBulkModalOpen] = useState<boolean>(false); // Bulk Modal state
-  const [categories, setCategories] = useState<any[]>([]); 
-const navigate = useNavigate();
-const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
 
+  const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]); // Tracks selected leads
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState<boolean>(false); // Bulk Modal state
+  const [categories, setCategories] = useState<any[]>([]);
+  const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
 const openModal = (leadId: string) => {
   setSelectedLeadId(leadId);
   setIsModalOpen(true);
@@ -112,15 +113,16 @@ const toggleBulkModal = () => {
   
 
 
-const handleBulkUpdateSubmit = async ( leadIds: string[],selectedCategories: string[]) => {
+const handleBulkUpdateSubmit = async (selectedCategories: string[]) => {
   console.log(selectedCategories);
   try {
     const response = await axios.patch(`${import.meta.env.VITE_BACKEND_URL}/leads/bulk-update`, {
-      leadIds: leadIds,
+      leadIds: selectedLeadIds,
       categories: selectedCategories,
     });
     if (response.status === 201) {
       toast.success("Bulk update successful!");
+      setSelectedLeadIds([]);
       fetchData(); // Refresh data after update
     }
   } catch (error) {
@@ -180,6 +182,20 @@ const handleBulkUpdateSubmit = async ( leadIds: string[],selectedCategories: str
     } catch (error) {
       toast.error("Failed to delete the lead. Please try again.");
     }
+  };const handleSelectLead = (id: string) => {
+    if (selectedLeadIds.includes(id)) {
+      setSelectedLeadIds(selectedLeadIds.filter((leadId) => leadId !== id));
+    } else {
+      setSelectedLeadIds([...selectedLeadIds, id]);
+    }
+  };
+
+  const handleSelectAllLeads = () => {
+    if (selectedLeadIds.length === leads.length) {
+      setSelectedLeadIds([]);
+    } else {
+      setSelectedLeadIds(leads.map((lead) => lead._id));
+    }
   };
  
   
@@ -193,10 +209,10 @@ const handleBulkUpdateSubmit = async ( leadIds: string[],selectedCategories: str
   };
   
   return (
-    <div style={{ padding: "20px",  overflowX: "auto", // Enables horizontal scrolling for the whole page
-       }}>
+    <div style={{ padding: "20px" 
+       }} className="overflow-x-auto">
           <div className="flex items-center justify-between mb-4">
-      {/* Back Button */}
+     
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-2 px-4 py-2 bg-black rounded-md hover:bg-gray-800"
@@ -206,19 +222,20 @@ const handleBulkUpdateSubmit = async ( leadIds: string[],selectedCategories: str
       </button>
 
       {/* Add New Lead Button */}
-      <div className="flex  gap-4 ">
+      <div className="flex flex-wrap gap-4  justify-end md:justify-end">
+      <button
+    onClick={toggleBulkModal}
+    className="px-4 py-2  bg-black text-white rounded-md"
+  >
+    Bulk Update
+  </button>
   <button
     onClick={() => navigate("/leads/add")}
     className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
   >
     Add New Lead
   </button>
-  <button
-    onClick={toggleBulkModal}
-    className="px-4 py-2 bg-black text-white rounded-md"
-  >
-    Bulk Update
-  </button>
+ 
 </div>
 
     </div>
@@ -317,7 +334,16 @@ const handleBulkUpdateSubmit = async ( leadIds: string[],selectedCategories: str
         <TableHead>
        
   <TableRow style={{ backgroundColor: "black", color: "white" }}>
-    {/* ID Header with Sort Arrow */}
+  <TableCell padding="checkbox">
+                <Checkbox
+                  indeterminate={
+                    selectedLeadIds.length > 0 && selectedLeadIds.length < leads.length
+                  }
+                  checked={selectedLeadIds.length === leads.length}
+                  onChange={handleSelectAllLeads}
+                  style={{ backgroundColor: "black", color: "white" }}
+                />
+              </TableCell>
     <TableCell
       style={{ color: "white", fontWeight: "bold", cursor: "pointer" }} // Always pointer
       onClick={() => handleSort("leadId")}
@@ -365,6 +391,12 @@ const handleBulkUpdateSubmit = async ( leadIds: string[],selectedCategories: str
   <TableBody>
     {paginatedLeads.map((lead) => (
       <TableRow key={lead.id}>
+        <TableCell padding="checkbox">
+                  <Checkbox
+                    checked={selectedLeadIds.includes(lead._id)}
+                    onChange={() => handleSelectLead(lead._id)}
+                  />
+                </TableCell>
         <TableCell>{lead.leadId}</TableCell>
         <TableCell>{lead.name}</TableCell>
         <TableCell>{lead.status}</TableCell>
@@ -418,7 +450,7 @@ const handleBulkUpdateSubmit = async ( leadIds: string[],selectedCategories: str
         <BulkUpdateModal
           isOpen={isBulkModalOpen}
           onClose={toggleBulkModal}
-          leads={leads}
+          
           categories={categories}
           onSubmit={handleBulkUpdateSubmit}
         />

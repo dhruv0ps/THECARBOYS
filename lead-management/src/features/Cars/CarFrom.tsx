@@ -251,10 +251,9 @@ const AddNewCarForm: React.FC = () => {
           <Select id="status" {...register('status', { required: 'Status is required' })}>
             <option value="">Select status</option>
             <option value="Available">Available</option>
-            <option value="Reserved">Reserved</option>
+            <option value="Booked">Booked</option>
             <option value="Sold">Sold</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="Pending Approval">Pending Approval</option>
+           
           </Select>
           {errors.status && <p className="text-red-500">{errors.status.message}</p>}
         </div>

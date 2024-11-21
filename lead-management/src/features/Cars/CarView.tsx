@@ -11,8 +11,8 @@ import {
   IconButton,
 
 } from "@mui/material";
-import { Edit, Delete } from "@mui/icons-material";
-import FilterListIcon from "@mui/icons-material/FilterList";
+import { Edit, Delete, ArrowDropUp, ArrowDropDown } from "@mui/icons-material";
+
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import showConfirmationModal from "../../components/confirmationUtil";
@@ -50,7 +50,7 @@ const CarList: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [showSortOptions, setShowSortOptions] = useState(false);
+ 
 const navigate = useNavigate();
 const [statusFilter, setStatusFilter] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -137,13 +137,7 @@ console.log(paginatedData);
   //   setCurrentPage(page);
   // };
 
-  const handleSortFieldChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortField(event.target.value as keyof Car);
-  };
 
-  const handleSortOrderChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortOrder(event.target.value as "asc" | "desc");
-  };
 
   const handleDeleteChild = async (id: string) => {
     const confirm = await showConfirmationModal("Are you sure you want to delete the car?");
@@ -157,7 +151,23 @@ console.log(paginatedData);
       toast.error("Failed to delete the car. Please try again.");
     }
   };
+  const handleSort = (field : keyof Car) => {
+    if(sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
 
+    }
+    else{
+      setSortField(field);
+      setSortOrder("asc")
+    }
+  }
+
+  const getSortIcon = (field : keyof Car) => {
+    if(sortField === field) {
+      return sortOrder === "asc" ? <ArrowDropUp fontSize="small"/> : <ArrowDropDown fontSize="small"/>
+  }
+  return <ArrowDropUp fontSize="small" style={{ color: "white", opacity: 1 }} />;
+};
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
 
@@ -243,67 +253,34 @@ console.log(paginatedData);
         >
           <option value="">Select status</option>
             <option value="Available">Available</option>
-            <option value="Reserved">Reserved</option>
+            <option value="Booked">Booked</option>
             <option value="Sold">Sold</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="Pending Approval">Pending Approval</option>
+           
         </select>
     
-      <IconButton
-        onClick={() => setShowSortOptions(!showSortOptions)}
-        style= {{color: "black"}}
-        aria-label="toggle sort options"
-      >
-        <FilterListIcon />
-      </IconButton>
-
-  
-      {showSortOptions && (
-        <>
-          {/* Sort By Field */}
-          <select
-            value={sortField}
-            onChange={handleSortFieldChange}
-            className="w-full p-2 border rounded-md"
-          >
-            <option value="">Sort By</option>
-           
-            <option value="year">Year</option>
-           
-            <option value="price">Price</option>
-          </select>
-
-          {/* Sort Order */}
-          <select
-            value={sortOrder}
-            onChange={handleSortOrderChange}
-            className="w-full p-2 border rounded-md"
-          >
-            <option value="asc">Ascending</option>
-            <option value="desc">Descending</option>
-          </select>
-        </>
-      )}
+      
     </div>
 
         {/* Table */}
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} style={{
+    
+    whiteSpace: "nowrap", }}>
           <Table>
             <TableHead>
               <TableRow style={{ backgroundColor: 'black', color: 'white' }}>
-              <TableCell style={{ color: 'white',fontWeight: 'bold' }} className="whitespace-nowrap overflow-hidden text-ellipsis max-w-xs">Vehicle ID</TableCell>
-                <TableCell style={{ color: 'white',fontWeight: 'bold' }} className="whitespace-nowrap overflow-hidden text-ellipsis max-w-xs">Make</TableCell>
-                <TableCell style={{ color: 'white',fontWeight: 'bold' }} className="whitespace-nowrap overflow-hidden text-ellipsis max-w-xs">Model</TableCell>
-                <TableCell style={{ color: 'white',fontWeight: 'bold' }} className="whitespace-nowrap overflow-hidden text-ellipsis max-w-xs">Year</TableCell>
-                <TableCell style={{ color: 'white',fontWeight: 'bold' }} className="whitespace-nowrap overflow-hidden text-ellipsis max-w-xs">Body Type</TableCell>
-                <TableCell style={{ color: 'white',fontWeight: 'bold' }} className="whitespace-nowrap overflow-hidden text-ellipsis max-w-xs">Engine Type</TableCell>
-                <TableCell style={{ color: 'white',fontWeight: 'bold' }} className="whitespace-nowrap overflow-hidden text-ellipsis max-w-xs">Drive</TableCell>
-                <TableCell style={{ color: 'white',fontWeight: 'bold' }} className="whitespace-nowrap overflow-hidden text-ellipsis max-w-xs">Fuel Type</TableCell>
-                <TableCell style={{ color: 'white',fontWeight: 'bold' }} className="whitespace-nowrap overflow-hidden text-ellipsis max-w-xs">Price</TableCell>
-                <TableCell style={{ color: 'white',fontWeight: 'bold' }} className="whitespace-nowrap overflow-hidden text-ellipsis max-w-xs">Color</TableCell>
-                <TableCell style={{ color: 'white',fontWeight: 'bold' }} className="whitespace-nowrap overflow-hidden text-ellipsis max-w-xs">Status</TableCell>
-                <TableCell style={{ color: 'white',fontWeight: 'bold' }} className="whitespace-nowrap overflow-hidden text-ellipsis max-w-xs">Transmission</TableCell>
-                <TableCell style={{ color: 'white',fontWeight: 'bold' }} className="whitespace-nowrap overflow-hidden text-ellipsis max-w-xs"> Action</TableCell>
+              <TableCell style={{ color: "white", fontWeight: "bold", cursor: "pointer" }}  onClick={() => handleSort("vehicleId")}>Vehicle ID {getSortIcon("vehicleId")}</TableCell>
+                <TableCell style={{ color: 'white',fontWeight: 'bold', cursor: "pointer" }}   onClick={() => handleSort("make")}>    Make {getSortIcon("make")}</TableCell>
+                <TableCell style={{ color: "white", fontWeight: "bold", cursor: "pointer" }}  onClick={() => handleSort("model")}>   Model {getSortIcon("model")}</TableCell>
+                <TableCell  style={{ color: "white", fontWeight: "bold", cursor: "pointer" }}   onClick={() => handleSort("year")}>    Year {getSortIcon("year")}</TableCell>
+                <TableCell style={{ color: 'white',fontWeight: 'bold' }} >Body Type</TableCell>
+                <TableCell style={{ color: 'white',fontWeight: 'bold' }} >Engine Type</TableCell>
+                <TableCell style={{ color: 'white',fontWeight: 'bold' }} >Drive</TableCell>
+                <TableCell style={{ color: 'white',fontWeight: 'bold' }} >Fuel Type</TableCell>
+                <TableCell style={{ color: "white", fontWeight: "bold", cursor: "pointer" }}    onClick={() => handleSort("price")}>  Price {getSortIcon("price")}</TableCell>
+                <TableCell style={{ color: 'white',fontWeight: 'bold' }} >Color</TableCell>
+                <TableCell style={{ color: 'white',fontWeight: 'bold' }} >Status</TableCell>
+                <TableCell style={{ color: 'white',fontWeight: 'bold' }} >Transmission</TableCell>
+                <TableCell style={{ color: 'white',fontWeight: 'bold' }} > Action</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
