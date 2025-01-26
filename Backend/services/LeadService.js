@@ -44,12 +44,12 @@ const createLead = async(leadData) => {
 
         const newLead = new Lead({ ...leadData,leadId});
         const saveLead = await newLead.save();
-        if (saveLead.phoneNumber) {
-          const message = `Hi ${saveLead.name}, thank you for your interest! Our team will contact you shortly. Your reference ID is ${saveLead.leadId}.`;
+        // if (saveLead.phoneNumber) {
+        //   const message = `Hi ${saveLead.name}, thank you for your interest! Our team will contact you shortly. Your reference ID is ${saveLead.leadId}.`;
           
           
-          await twilioService.sendSMS(saveLead.phoneNumber, message);
-        }
+        //   await twilioService.sendSMS(saveLead.phoneNumber, message);
+        // }
     
       
         return saveLead;

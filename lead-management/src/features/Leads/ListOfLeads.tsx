@@ -396,7 +396,7 @@ const handleBulkUpdateSubmit = async (selectedCategories: string[]) => {
     <TableCell style={{ color: "white", fontWeight: "bold" }}>Manager</TableCell>
     <TableCell style={{ color: "white", fontWeight: "bold" }}>Phone Number</TableCell>
     <TableCell style={{ color: "white", fontWeight: "bold" }}>Lead Source</TableCell>
-    <TableCell style={{ color: "white", fontWeight: "bold" }}>Budget</TableCell>
+    {/* <TableCell style={{ color: "white", fontWeight: "bold" }}>Budget</TableCell> */}
 
     {/* Last Follow-Up Header with Sort Arrow */}
     <TableCell
@@ -471,7 +471,7 @@ const handleBulkUpdateSubmit = async (selectedCategories: string[]) => {
         <TableCell>{lead.manager}</TableCell>
         <TableCell>{lead.phoneNumber}</TableCell>
         <TableCell>{lead.leadSource}</TableCell>
-        <TableCell>${lead.budget.toLocaleString()}</TableCell>
+        {/* <TableCell>${lead.budget.toLocaleString()}</TableCell> */}
         <TableCell>{lead.nextFollowUp.slice(0, 10)}</TableCell>
         <TableCell>{lead.interestedModels.join(", ")}</TableCell>
         <TableCell>
