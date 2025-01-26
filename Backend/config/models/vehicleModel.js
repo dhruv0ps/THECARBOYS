@@ -1,4 +1,3 @@
-// vehicleModel.js
 
 const mongoose = require("mongoose");
 

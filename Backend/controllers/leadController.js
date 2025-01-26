@@ -28,6 +28,7 @@ const getAllLeads = async(req,res) => {
             manager: req.query.manager,
             priorityLevel: req.query.priorityLevel,
             leadSource: req.query.leadSource,
+            interestedModels : req.query.interestedModels
         };
         const search = req.query.search || ''; 
         const sortBy = req.query.sortBy; // Example: "createdDate:desc"
@@ -92,7 +93,15 @@ const deleteLead = async (req, res) => {
         res.status(500).json({ error: error.message || "Failed to delete lead" });
     }
 };
-
+const topLead = async(req,res) => {
+    try{
+       const toplead = await LeadService.gettopLead(req.body);
+       return res.json({ status: true, data: toplead, err: {} });
+    }catch (error) {
+        console.error("Error in deleteLead controller:", error);
+        res.status(500).json({ error: error.message || "Failed to delete lead" });
+    }
+}
 const bulkupdates = async(req,res) => {
     try{
         const { leadIds, categories } = req.body;
@@ -110,4 +119,4 @@ const bulkupdates = async(req,res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 }
-module.exports = { createLead,getAllLeads,getSinglelead ,updateLead, deleteLead,bulkupdates};
+module.exports = { createLead,getAllLeads,getSinglelead ,updateLead, deleteLead,bulkupdates,topLead};

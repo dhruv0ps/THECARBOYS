@@ -54,6 +54,15 @@ const getAllVehicles = async (req, res) => {
         res.status(500).json({ error: error.message || "Failed to retrieve vehicles" });
     }
 };
+const getuniqueVehicles = async (req, res) => {
+    try {
+        const vehicles = await vehicleService.getUniqueVehicleModels();
+        res.status(200).json(vehicles);
+    } catch (error) {
+        console.error("Error in getAllVehicles controller:", error);
+        res.status(500).json({ error: error.message || "Failed to retrieve vehicles" });
+    }
+};
 const getVehicleById = async (req, res) => {
     try {
         const vehicleId = req.params.id; 
@@ -67,4 +76,4 @@ const getVehicleById = async (req, res) => {
     }
 };
 
-module.exports = {createVehicle,updateVehicle,deleteVehicle,getAllVehicles,getVehicleById};
+module.exports = {createVehicle,updateVehicle,deleteVehicle,getAllVehicles,getVehicleById,getuniqueVehicles};

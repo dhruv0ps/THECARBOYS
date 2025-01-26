@@ -15,5 +15,7 @@ export type Lead = {
     updatedDate: string;
     priorityLevel: string;
     _id : string
+    isActive? : boolean
+    interestedModels: string[];
   };
   

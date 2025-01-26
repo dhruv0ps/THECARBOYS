@@ -31,6 +31,7 @@ router.get("/leads",leadController.getAllLeads)
 router.get("/leads/:id",leadController.getSinglelead)
 router.put('/leads/:id', leadController.updateLead);
 router.delete("/leads/:id",leadController.deleteLead);
+router.post("/leaddashboard",leadController.topLead)
 // Bulk updates 
 router.patch("/leads/bulk-update",leadController.bulkupdates)
 
@@ -41,12 +42,13 @@ router.get("/leadcategory/:id",leadCategoryController.getLeadCategoryByid);
 router.put("/updatecategory/:id",leadCategoryController.updateCategory)
 router.delete("/leadcategory/:id", leadCategoryController.deleteCategoryController);
 
+
 router.post("/vehicles/add",vehicelController.createVehicle)
 router.put("/vehicles/:id", vehicelController.updateVehicle);
 router.delete("/vehicles/:id", vehicelController.deleteVehicle);
 router.get("/vehicles", vehicelController.getAllVehicles);
 router.get("/vehicles/:id", vehicelController.getVehicleById);
-
+router.get("/models",vehicelController.getuniqueVehicles)
 
 //sms
 

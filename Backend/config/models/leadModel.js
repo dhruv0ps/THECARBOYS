@@ -27,7 +27,11 @@ const leadSchema = new mongoose.Schema({
     manager: {
         type: String,
         required: true,
-        enum: ["Rajat", "Tanveer", "Vipash"], // Replace with dynamic user data if required
+        enum: ["Rajat", "Tanveer", "Vipash"], 
+    },
+    dlstatus:{
+        type: String,
+        enum:["G","G1","G2"]
     },
     name: {
         type: String,
@@ -111,18 +115,19 @@ const leadSchema = new mongoose.Schema({
             editedBy: { type: String, required: false }, // Who made the edit
             changes: { type: Map, of: String } // Stores changed fields and their new values
         }
-    ]
+    ],
+    isActive: {
+        type: Boolean,
+        default: true,
+    },
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
 
-leadSchema.pre('save',function(next) {
-    if(this.isModified()) {
-        this.updateDate = Date.now();
-
+leadSchema.pre('save', function (next) {
+    if (this.phoneNumber) {
+        this.phoneNumber = this.phoneNumber.replace(/[-]/g, ""); // Remove '+' and '-'
     }
     next();
-
-})
-
+});
 const Lead = mongoose.model("Lead",leadSchema);
 
 module.exports = Lead;

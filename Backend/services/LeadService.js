@@ -22,7 +22,7 @@ const createLead = async(leadData) => {
     try{
         if (leadData.leadCategories) {
       const categories = await Leadcategory.find({
-        leadcategory: { $in: leadData.leadCategories }, // Match by name
+        leadcategory: { $in: leadData.leadCategories }, 
       });
 
       if (categories.length !== leadData.leadCategories.length) {
@@ -35,9 +35,9 @@ const createLead = async(leadData) => {
         throw new Error(`Invalid categories: ${invalidCategories.join(", ")}`);
       }
 
-      // Map to ObjectIds
+      
       leadData.leadcategory = categories.map((category) => category._id);
-      delete leadData.leadCategories; // Remove frontend-only field
+      delete leadData.leadCategories; 
     }
 
         const leadId = await getNextLead();
@@ -47,7 +47,7 @@ const createLead = async(leadData) => {
         if (saveLead.phoneNumber) {
           const message = `Hi ${saveLead.name}, thank you for your interest! Our team will contact you shortly. Your reference ID is ${saveLead.leadId}.`;
           
-          // Use Twilio or your SMS service to send the message
+          
           await twilioService.sendSMS(saveLead.phoneNumber, message);
         }
     
@@ -69,7 +69,11 @@ const getAllLeads = async ({filters,search,sortBy}) => {
         if(filters.manager) query.manager = filters.manager;
         if (filters.priorityLevel) query.priorityLevel = filters.priorityLevel;
         if (filters.leadSource) query.leadSource = filters.leadSource;
-
+        if (filters.interestedModels) {
+          query.interestedModels = filters.interestedModels; 
+      }
+          
+    
         if(search) {
           const escapedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     
@@ -130,7 +134,7 @@ const updateLead = async (_id, updateData,editedBy) => {
         throw new Error("Some lead categories are invalid");
       }
 
-      // Map to ObjectIds
+      
       updateData.leadcategory = categories.map((category) => category._id);
       delete updateData.leadCategories; // Remove frontend-only field
     }
@@ -148,7 +152,7 @@ const updateLead = async (_id, updateData,editedBy) => {
 
     existingLead.editHistory.push({
         editedAt: new Date(),
-        editedBy: editedBy || "System", // Record who made the edit (default to "System" if not specified)
+        editedBy: editedBy || "System",
         changes: changes
     });
 
@@ -168,19 +172,24 @@ const updateLead = async (_id, updateData,editedBy) => {
 
 
 const deleteLead = async (_id) => {
-    try {
-        const deletedLead = await Lead.findByIdAndDelete(_id);
+  try {
+      const updatedLead = await Lead.findByIdAndUpdate(
+          _id,
+          { isActive: false }, 
+          { new: true } 
+      );
 
-        if (!deletedLead) {
-            throw new Error("Lead not found");
-        }
+      if (!updatedLead) {
+          throw new Error("Lead not found");
+      }
 
-        return deletedLead;
-    } catch (error) {
-        console.error("Error in deleting lead:", error);
-        throw new Error("Failed to delete lead");
-    }
+      return updatedLead;
+  } catch (error) {
+      console.error("Error in marking lead as inactive:", error);
+      throw new Error("Failed to update lead status");
+  }
 };
+
 
 const bulkupdates = async (leadIds, categories) => {
   try {
@@ -231,4 +240,49 @@ const bulkupdates = async (leadIds, categories) => {
   }
 };
 
-module.exports = { createLead, getAllLeads,getSingleId, updateLead, deleteLead,bulkupdates };
+const gettopLead = async (filters = {}) => {
+  try {
+      const { startDate, endDate } = filters;
+
+      const query = {};
+      if (startDate) {
+          query.month = { ...query.month, $gte: new Date(startDate) };
+      }
+      if (endDate) {
+          query.month = { ...query.month, $lte: new Date(endDate) };
+      }
+
+      const topCarLeads = await Lead.aggregate([
+          { $match: query },
+          { $unwind: "$interestedModels" },
+          {
+              $group: {
+                  _id: "$interestedModels",
+                  totalLeads: { $sum: 1 },
+              },
+          },
+          { $sort: { totalLeads: -1 } },
+          { $limit: 7 },
+      ]);
+
+      const leadsByStatus = await Lead.aggregate([
+          { $match: query },
+          {
+              $group: {
+                  _id: "$status",
+                  totalLeads: { $sum: 1 },
+              },
+          },
+      ]);
+
+      const totalLeads = await Lead.countDocuments(query);
+
+      return { topCarLeads, leadsByStatus, totalLeads };
+  } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      throw new Error("Failed to fetch dashboard data.");
+  }
+};
+
+
+module.exports = { createLead, getAllLeads,getSingleId, updateLead, deleteLead,bulkupdates,gettopLead };

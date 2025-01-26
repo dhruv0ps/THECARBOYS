@@ -90,4 +90,27 @@ const getVehicleById = async (vehicleId) => {
         throw new Error("Failed to retrieve vehicle");
     }
 };
-module.exports = {createVehicle,updateVehicle,deleteVehicle, getAllVehicles, getVehicleById}
+
+const getUniqueVehicleModels = async () => {
+    try {
+        const uniqueModels = await Vehicle.aggregate([
+            {
+                $group: {
+                    _id: "$model", 
+                }
+            },
+            {
+                $project: {
+                    _id: 0, 
+                    model: "$_id" 
+                }
+            }
+        ]);
+
+        return uniqueModels;
+    } catch (error) {
+        console.error("Error retrieving unique vehicle models:", error);
+        throw new Error("Failed to retrieve unique vehicle models");
+    }
+};
+module.exports = {createVehicle,updateVehicle,deleteVehicle, getAllVehicles, getVehicleById,getUniqueVehicleModels}

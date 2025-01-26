@@ -126,6 +126,13 @@ const NavSideBar: React.FC<NavSideBarProps> = ({ isSidebarOpen }) => {
                         </Sidebar.Item>
                         <Sidebar.Item
                             as={Link}
+                            to="/leads/archive"
+                            className={location.pathname === "/leads/archive" ? "sidebar-item-active" : "sidebar-item"}
+                        >
+                             Lead Archive
+                        </Sidebar.Item>
+                        <Sidebar.Item
+                            as={Link}
                             to="/leads/category"
                             className={location.pathname === "/leads/category" ? "sidebar-item-active" : "sidebar-item"}
                         >

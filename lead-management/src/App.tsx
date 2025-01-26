@@ -12,8 +12,10 @@ import UserTable from './features/User/ListUser';
 import LoginPage from './features/User/Login';
 import ProtectedRoute from './ProtectedRoute';
 import LeadCategoryModal from './features/Leads/LeadCategoryModal';
+import InactiveLeads from './features/Leads/InActiveLeads';
+import Dashboard from './features/Dashboard/Dashboard';
 
-// Define routes using createBrowserRouter
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -23,6 +25,14 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
+      {
+        path:"/",
+        element:(
+<ProtectedRoute> 
+        <Dashboard />
+      </ProtectedRoute>
+        )
+      },
       {
         path: "/leads/add",
         element: (
@@ -59,8 +69,16 @@ const router = createBrowserRouter([
       {
         path: "/leads/category",
         element: (
-          <ProtectedRoute> {/* Wrap each child route in ProtectedRoute */}
+          <ProtectedRoute> 
             <LeadCategoryModal />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/leads/archive",
+        element: (
+          <ProtectedRoute> 
+            <InactiveLeads />
           </ProtectedRoute>
         ),
       },
@@ -74,6 +92,14 @@ const router = createBrowserRouter([
       },
       {
         path: "/leads/view",
+        element: (
+          <ProtectedRoute>
+            <ListOfLeads />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "/leads/view/:model",
         element: (
           <ProtectedRoute>
             <ListOfLeads />

@@ -5,6 +5,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaChevronLeft } from "react-icons/fa";
+import { Car } from "../../models/Car";
 import ObjectMultiSelectDropdown from "../../components/ObjectMultiSelectDropdown";
 type Lead = {
   id: string;
@@ -30,10 +31,12 @@ type Lead = {
   assignedTo?: string;
   _id?: string;
   leadcategory?: string;
+  dlstatus?:string;
+
 };
 
 const LeadForm: React.FC = () => {
-  const { id } = useParams<{ id: string }>(); // Get the id from the URL
+  const { id } = useParams<{ id: string }>(); 
   const navigate = useNavigate();
   const [lead, setLead] = useState<Partial<Lead>>({
     status: "New",
@@ -48,7 +51,8 @@ const LeadForm: React.FC = () => {
   const [_isFetching, setIsFetching] = useState(false); // To handle loading for fetching data
   const formatToDateInput = (isoString: string | undefined) =>
     isoString ? isoString.split("T")[0] : ""; // Extract YYYY-MM-DD part
-  const models = ["Mustang", "Civic", "Accord", "Camry", "Corolla"];
+  // const models = ["Mustang", "Civic", "Accord", "Camry", "Corolla"];
+  const [models, setModels] = useState<string[]>([]);
   const priorities = ["High", "Medium", "Low"];
 
   // Fetch data if an ID exists (for editing)
@@ -57,7 +61,19 @@ const LeadForm: React.FC = () => {
       fetchLeadData();
     }
     fetchLeadCategory();
+    fetchModels();
   }, [id]);
+  const fetchModels = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/vehicles`);
+      const data: Car[] = response.data; 
+      const fetchedModels = data.map((car) =>  `${car.model}`);
+      setModels(fetchedModels);
+    } catch (error) {
+      console.error("Error fetching models:", error);
+      toast.error("Failed to fetch models. Please try again.");
+    }
+  };
   const fetchLeadCategory = async () => {
     try {
       const response = await axios.get(
@@ -110,14 +126,12 @@ const LeadForm: React.FC = () => {
        const { leadcategory, ...payload } = lead;
 
       if (id) {
-        // Update existing lead
         const response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/leads/${id}`, payload);
         if (response.status === 200) {
           toast.success("Lead updated successfully");
           navigate("/leads/view");
         }
       } else {
-        // Add new lead
         const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/addlead`, payload);
         if (response.status === 201) {
           toast.success("Lead saved successfully");
@@ -283,8 +297,8 @@ const LeadForm: React.FC = () => {
           <Label htmlFor="lead categories">Lead Categoreis</Label>
         <ObjectMultiSelectDropdown
   options={leadCategories.map((category: any) => ({
-    value: category._id, // Use the _id for selection
-    label: category.leadcategory, // Display the name
+    value: category._id, 
+    label: category.leadcategory, 
   }))}
   value={lead.leadCategories || []}
   placeholder="Select lead categories"
@@ -296,7 +310,7 @@ const LeadForm: React.FC = () => {
             </div>
 
         {/* Budget */}
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <Label htmlFor="budget">Budget (optional)</Label>
           <TextInput
             type="number"
@@ -306,7 +320,21 @@ const LeadForm: React.FC = () => {
             onChange={(e) => handleChange('budget', e.target.value)}
             placeholder="Expected budget"
           />
-        </div>
+        </div> */}
+        <div className="space-y-2">
+            <Label htmlFor="assignedTo">DL Status</Label>
+            <Select
+              id="assignedTo"
+              value={lead.
+                dlstatus || ''}
+              onChange={(e) => handleChange('dlstatus', e.target.value)}
+            >
+              <option>Select DL Status</option>
+              {['G', 'G1', 'G2'].map((rep) => (
+                <option key={rep} value={rep}>{rep}</option>
+              ))}
+            </Select>
+          </div>
 
         {/* Payment Plan */}
         <div className="space-y-2">

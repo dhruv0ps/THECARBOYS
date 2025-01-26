@@ -17,15 +17,15 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({ options, valu
   const handleSelect = (item: string) => {
     if (!value.includes(item)) {
       const updatedItems = [...value, item];
-      onChange(updatedItems); // Pass the updated selection to the parent component
-      setIsOpen(false); // Close the dropdown after selecting an item
+      onChange(updatedItems); 
+      setIsOpen(false); 
     }
   };
 
-  // Handle removing a selected item
+ 
   const handleRemove = (item: string) => {
     const updatedItems = value.filter((i) => i !== item);
-    onChange(updatedItems); // Pass the updated selection to the parent component
+    onChange(updatedItems); 
   };
 
   return (
