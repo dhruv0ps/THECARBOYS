@@ -32,6 +32,8 @@ type Lead = {
   _id?: string;
   leadcategory?: string;
   dlstatus?:string;
+  budgetFrom?:number;
+  budgetTo?:number 
 
 };
 
@@ -45,6 +47,8 @@ const LeadForm: React.FC = () => {
     priorityLevel: "Medium",
     interestedModels: [],
     leadCategories: [],
+    budgetFrom: 0,
+    budgetTo: 0,
   });
   const [leadCategories, setLeadCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -321,6 +325,16 @@ const LeadForm: React.FC = () => {
             placeholder="Expected budget"
           />
         </div> */}
+         <div className="mt-2">
+              <Label htmlFor="budgetFrom">Budget From</Label>
+              <TextInput type="number" id="budgetFrom" value={lead.budgetFrom} onChange={(e) => handleChange("budgetFrom", e.target.value)} />
+            </div>
+
+            <div className="mt-2">
+              <Label htmlFor="budgetTo">Budget To</Label>
+              <TextInput type="number" id="budgetTo" value={lead.budgetTo} onChange={(e) => handleChange("budgetTo", e.target.value)} />
+            </div>
+
         <div className="space-y-2">
             <Label htmlFor="assignedTo">DL Status</Label>
             <Select

@@ -4,7 +4,7 @@ const { model } = require("mongoose");
 const { search } = require("../routes");
 const Leadcategory = require("../config/models/leadCategoryModel");
 const twilioService = require("../services/twilioService");
-
+const Vehicle = require("../config/models/vehicleModel");
 const getNextLead = async() => {
     const counter = await Counter.findOneAndUpdate(
         {name : "leadId"},
@@ -242,47 +242,99 @@ const bulkupdates = async (leadIds, categories) => {
 
 const gettopLead = async (filters = {}) => {
   try {
-      const { startDate, endDate } = filters;
+    const { startDate, endDate, model, year, trim, budgetMin, budgetMax } = filters;
 
-      const query = {};
-      if (startDate) {
-          query.month = { ...query.month, $gte: new Date(startDate) };
-      }
-      if (endDate) {
-          query.month = { ...query.month, $lte: new Date(endDate) };
-      }
+    let query = {};
 
-      const topCarLeads = await Lead.aggregate([
-          { $match: query },
-          { $unwind: "$interestedModels" },
-          {
-              $group: {
-                  _id: "$interestedModels",
-                  totalLeads: { $sum: 1 },
-              },
-          },
-          { $sort: { totalLeads: -1 } },
-          { $limit: 7 },
-      ]);
+    // Date Filtering
+    if (startDate) query.month = { ...query.month, $gte: new Date(startDate) };
+    if (endDate) query.month = { ...query.month, $lte: new Date(endDate) };
 
-      const leadsByStatus = await Lead.aggregate([
-          { $match: query },
-          {
-              $group: {
-                  _id: "$status",
-                  totalLeads: { $sum: 1 },
-              },
-          },
-      ]);
+    // Vehicle Filtering
+    let vehicleMatch = {};
+    if (model) vehicleMatch.model = model;
+    if (year) vehicleMatch.year = parseInt(year);
+    if (trim) vehicleMatch.trim = trim;
 
-      const totalLeads = await Lead.countDocuments(query);
+    // Fetch matching vehicles based on filters
+    const vehicles = await Vehicle.find(vehicleMatch).select("model");
+    if (!vehicles.length) {
+      return { topCarLeads: [], leadsByStatus: [], totalLeads: 0, budgetData: [] };
+    }
 
-      return { topCarLeads, leadsByStatus, totalLeads };
+    const vehicleModels = vehicles.map((v) => v.model);
+
+    // Budget Filtering
+    if (budgetMin || budgetMax) {
+      query.$or = [];
+
+      if (budgetMin) query.$or.push({ budgetTo: { $gte: parseInt(budgetMin) } });
+      if (budgetMax) query.$or.push({ budgetFrom: { $lte: parseInt(budgetMax) } });
+
+      if (query.$or.length === 0) delete query.$or;
+    }
+
+    // Aggregate Top Car Leads
+    const topCarLeads = await Lead.aggregate([
+      { $match: { ...query, interestedModels: { $in: vehicleModels } } },
+      { $unwind: "$interestedModels" },
+      { $match: { interestedModels: { $in: vehicleModels } } },
+      {
+        $group: {
+          _id: "$interestedModels",
+          totalLeads: { $sum: 1 },
+        },
+      },
+      { $sort: { totalLeads: -1 } },
+      { $limit: 7 },
+    ]);
+
+    // Aggregate Leads by Status
+    const leadsByStatus = await Lead.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: "$status",
+          totalLeads: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Aggregate Budget Distribution
+    const budgetData = await Lead.aggregate([
+      { $match: query },
+      {
+        $project: {
+          budgetRange: {
+            $concat: [
+              { $toString: "$budgetFrom" },
+              " - ",
+              { $toString: "$budgetTo" }
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: "$budgetRange",
+          totalLeads: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } } 
+    ]);
+    
+
+    const totalLeads = await Lead.countDocuments(query);
+
+    return { topCarLeads, leadsByStatus, totalLeads, budgetData };
   } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-      throw new Error("Failed to fetch dashboard data.");
+    console.error("Error fetching dashboard data:", error);
+    throw new Error("Failed to fetch dashboard data.");
   }
 };
+
+
+
 
 
 module.exports = { createLead, getAllLeads,getSingleId, updateLead, deleteLead,bulkupdates,gettopLead };

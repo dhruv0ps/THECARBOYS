@@ -109,6 +109,12 @@ const leadSchema = new mongoose.Schema({
         type: String,
         required: false,
     },
+    budgetFrom:{
+        type:Number
+    },
+    budgetTo: {
+        type:Number
+    },
     editHistory: [
         {
             editedAt: { type: Date, default: Date.now }, // Date when the edit was made
