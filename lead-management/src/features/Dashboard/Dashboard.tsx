@@ -24,7 +24,7 @@ import {
 } from "@mui/material";
 import { toast } from "react-toastify";
 import { Card } from "flowbite-react";
-
+import { useNavigate } from "react-router-dom";
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -41,6 +41,7 @@ const Dashboard: React.FC = () => {
   const [budgetMin, setBudgetMin] = useState<number>(2000);
   const [budgetMax, setBudgetMax] = useState<number>(10000);
   const [budgetData, setBudgetData] = useState<any[]>([]);
+  const navigate = useNavigate()
   useEffect(() => {
     const today = new Date();
     const lastMonth = new Date();
@@ -60,19 +61,34 @@ const Dashboard: React.FC = () => {
 
   const fetchDashboardData = async () => {
     setIsLoading(true);
+    const authToken = localStorage.getItem("authToken");
+    
+    if (!authToken) {
+      toast.error("Unauthorized. Please log in.");
+      navigate("/login");
+      return;
+    }
+  
     try {
-      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/leaddashboard`, {
-        startDate,
-        endDate,
-        model: selectedModel,
-        year: selectedYear,
-        trim: selectedTrim,
-        budgetMin: budgetMin || undefined,
-        budgetMax: budgetMax || undefined,
-      });
-
-      const { topCarLeads, totalLeads,budgetData } = response.data.data;
-
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/leaddashboard`,
+        {
+          startDate,
+          endDate,
+          model: selectedModel,
+          year: selectedYear,
+          trim: selectedTrim,
+          budgetMin: budgetMin || undefined,
+          budgetMax: budgetMax || undefined,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        }
+      );
+  
+      const { topCarLeads, totalLeads, budgetData } = response.data.data;
       setTopCarLeads(topCarLeads || []);
       setBudgetData(budgetData || []);
       setTotalLeads(totalLeads || 0);
@@ -83,16 +99,30 @@ const Dashboard: React.FC = () => {
       setIsLoading(false);
     }
   };
+  
 
   const fetchVehicles = async () => {
+    const authToken = localStorage.getItem("authToken");
+  
+    if (!authToken) {
+      toast.error("Unauthorized. Please log in.");
+      navigate("/login");
+      return;
+    }
+  
     try {
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/vehicles`);
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/vehicles`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
       setVehicles(response.data);
     } catch (error) {
       console.error("Error fetching vehicles:", error);
       toast.error("Failed to fetch vehicles.");
     }
   };
+  
 
   const models = [...new Set(vehicles.map((vehicle) => vehicle.model))];
   const years = [...new Set(vehicles.map((vehicle) => vehicle.year))];

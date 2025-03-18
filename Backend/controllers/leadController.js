@@ -1,5 +1,6 @@
 const LeadService = require("../services/LeadService");
-
+const ExcelService = require("../services/excelService")
+const fs = require('fs').promises;
 const createLead = async(req,res) => {
 
     try{
@@ -102,6 +103,57 @@ const topLead = async(req,res) => {
         res.status(500).json({ error: error.message || "Failed to delete lead" });
     }
 }
+const bulkUpload = async (req, res) => {
+    try {
+      // console.log(req.file);
+      const uploadedFile = req.files?.[0] || req.file;
+      if (!uploadedFile) {
+        return res.status(400).json({
+          status: false,
+          data: {},
+          err: "No file uploaded"
+        });
+      }
+
+      let productData;
+      try {
+        if (req.file.mimetype === 'text/csv') {
+          productData = await ExcelService.parseCSV(req.file.path);
+        } else {
+          productData = ExcelService.parseExcel(req.file.path);
+        }
+      } catch (error) {
+        return res.status(400).json({
+          status: false,
+          data: {},
+          err: `Error parsing file: ${error.message}`
+        });
+      }
+
+      const result = await LeadService.bulkLeads(productData);
+
+      return res.json({
+        status: true,
+        data: result,
+        err: null
+      });
+    } catch (error) {
+      // console.log(error)
+      return res.status(500).json({
+        status: false,
+        data: {},
+        err: error.message
+      });
+    } finally {
+      if (req.file) {
+        try {
+          await fs.unlink(req.file.path);
+        } catch (err) {
+          console.error('Error deleting file:', err);
+        }
+      }
+    }
+  };
 const bulkupdates = async(req,res) => {
     try{
         const { leadIds, categories } = req.body;
@@ -119,4 +171,4 @@ const bulkupdates = async(req,res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 }
-module.exports = { createLead,getAllLeads,getSinglelead ,updateLead, deleteLead,bulkupdates,topLead};
+module.exports = { createLead,getAllLeads,getSinglelead ,updateLead, deleteLead,bulkupdates,topLead,bulkUpload};

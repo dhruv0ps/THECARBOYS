@@ -18,7 +18,7 @@ const leadSchema = new mongoose.Schema({
     status: {
         type: String,
         enum: ["New", "Hot", "Cold", "Warm", "Lost", "Closed", "Pending Approval", "Timepass"],
-        required: true,
+        
     },
     month: {
         type: Date,
@@ -26,7 +26,7 @@ const leadSchema = new mongoose.Schema({
     },
     manager: {
         type: String,
-        required: true,
+        
         enum: ["Rajat", "Tanveer", "Vipash"], 
     },
     dlstatus:{
@@ -48,11 +48,14 @@ const leadSchema = new mongoose.Schema({
     leadSource: {
         type: String,
         enum: ["Walk-in", "Instagram", "Facebook", "Marketplace", "Referral", "Ad", "Car Gurus", "Web"],
-        required: true,
+    
     },
     interestedModels: {
         type: [String], // Array of strings for multi-select
         default: [],
+    },
+    make:{
+        type:String,
     },
     budget: {
         type: Number,
@@ -90,7 +93,7 @@ const leadSchema = new mongoose.Schema({
     createdDate: {
         type: Date,
         default: Date.now,
-        immutable: true, // Ensures this date does not change
+        immutable: true, 
     },
     updatedDate: {
         type: Date,
@@ -117,9 +120,9 @@ const leadSchema = new mongoose.Schema({
     },
     editHistory: [
         {
-            editedAt: { type: Date, default: Date.now }, // Date when the edit was made
-            editedBy: { type: String, required: false }, // Who made the edit
-            changes: { type: Map, of: String } // Stores changed fields and their new values
+            editedAt: { type: Date, default: Date.now }, 
+            editedBy: { type: String, required: false }, 
+            changes: { type: Map, of: String } 
         }
     ],
     isActive: {

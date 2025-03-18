@@ -1,5 +1,6 @@
 const vehicleService = require('../services/vehicleService');
-
+const ExcelService = require("../services/excelService")
+const fs = require('fs').promises;
 const createVehicle = async(req,res) => {
         try{
            const vehicleData = req.body;
@@ -75,5 +76,55 @@ const getVehicleById = async (req, res) => {
         res.status(500).json({ error: error.message || "Failed to retrieve vehicle" });
     }
 };
+const bulkUpload = async (req, res) => {
+    try {
+      // console.log(req.file);
+      const uploadedFile = req.files?.[0] || req.file;
+      if (!uploadedFile) {
+        return res.status(400).json({
+          status: false,
+          data: {},
+          err: "No file uploaded"
+        });
+      }
 
-module.exports = {createVehicle,updateVehicle,deleteVehicle,getAllVehicles,getVehicleById,getuniqueVehicles};
+      let productData;
+      try {
+        if (req.file.mimetype === 'text/csv') {
+          productData = await ExcelService.parseCSV(req.file.path);
+        } else {
+          productData = ExcelService.parseExcel(req.file.path);
+        }
+      } catch (error) {
+        return res.status(400).json({
+          status: false,
+          data: {},
+          err: `Error parsing file: ${error.message}`
+        });
+      }
+
+      const result = await vehicleService.bulkUpload(productData);
+
+      return res.json({
+        status: true,
+        data: result,
+        err: null
+      });
+    } catch (error) {
+      // console.log(error)
+      return res.status(500).json({
+        status: false,
+        data: {},
+        err: error.message
+      });
+    } finally {
+      if (req.file) {
+        try {
+          await fs.unlink(req.file.path);
+        } catch (err) {
+          console.error('Error deleting file:', err);
+        }
+      }
+    }
+  };
+module.exports = {createVehicle,updateVehicle,deleteVehicle,getAllVehicles,getVehicleById,getuniqueVehicles,bulkUpload};

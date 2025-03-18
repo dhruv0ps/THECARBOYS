@@ -46,17 +46,38 @@ const InActiveLeads: React.FC = () => {
         fetchCategories();
     }, [searchQuery, statusFilter, leadSourceFilter, priorityFilter, sortField, sortOrder]);
     const fetchCategories = async () => {
-
+        const authToken = localStorage.getItem("authToken");
+    
+        if (!authToken) {
+            toast.error("Unauthorized. Please log in.");
+            navigate("/login");
+            return;
+        }
+    
         try {
-            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/leadcategory`);
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/leadcategory`, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                },
+            });
             setCategories(response.data.data);
             console.log(categories);
         } catch (error) {
             console.error("Error fetching categories:", error);
+            toast.error("Failed to fetch categories.");
         }
     };
+    
     const fetchData = async () => {
         setIsLoading(true);
+        const authToken = localStorage.getItem("authToken");
+    
+        if (!authToken) {
+            toast.error("Unauthorized. Please log in.");
+            navigate("/login");
+            return;
+        }
+    
         try {
             const params = {
                 search: searchQuery,
@@ -69,19 +90,21 @@ const InActiveLeads: React.FC = () => {
             };
             const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/leads`, {
                 params,
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                },
             });
-
+    
             const inactiveLeads = response.data.data.filter((lead: Lead) => !lead.isActive);
-
             setLeads(inactiveLeads);
-
         } catch (error) {
             console.error("Error fetching leads:", error);
+            toast.error("Failed to fetch leads.");
         } finally {
-            setIsLoading(false); // Stop loading
+            setIsLoading(false);
         }
     };
-
+    
 
     const handleSort = (field: keyof Lead) => {
         if (sortField === field) {
@@ -119,11 +142,24 @@ const InActiveLeads: React.FC = () => {
     const handleRestore = async (id: string) => {
         const confirm = await showConfirmationModal("Are you sure you want to restore the lead?");
         if (!confirm) return;
+        const authToken = localStorage.getItem("authToken");
 
+        if (!authToken) {
+            toast.error("Unauthorized. Please log in.");
+            navigate("/login");
+            return;
+        }
+    
         try {
-            await axios.put(`${import.meta.env.VITE_BACKEND_URL}/leads/${id}`,{
-                isActive: true,
-            });
+            await axios.put(
+                `${import.meta.env.VITE_BACKEND_URL}/leads/${id}`,
+                { isActive: true },
+                {
+                    headers: {
+                        Authorization: `Bearer ${authToken}`,
+                    },
+                }
+            );
             toast.success("Lead Restored successfully!");
             await fetchData();
         } catch (error) {
@@ -284,16 +320,7 @@ const InActiveLeads: React.FC = () => {
                     <TableHead>
 
                         <TableRow style={{ backgroundColor: "black", color: "white" }}>
-                            {/* <TableCell padding="checkbox">
-                                <Checkbox
-                                    indeterminate={
-                                        selectedLeadIds.length > 0 && selectedLeadIds.length < leads.length
-                                    }
-                                    checked={selectedLeadIds.length === leads.length}
-                                    onChange={handleSelectAllLeads}
-                                    style={{ backgroundColor: "black", color: "white" }}
-                                />
-                            </TableCell> */}
+                          
                             <TableCell
                                 style={{ color: "white", fontWeight: "bold", cursor: "pointer" }}
                                 onClick={() => handleSort("leadId")}
@@ -347,14 +374,14 @@ const InActiveLeads: React.FC = () => {
                                             onChange={() => handleSelectLead(lead._id)}
                                         />
                                     </TableCell> */}
-                                    <TableCell>{lead.leadId}</TableCell>
-                                    <TableCell>{lead.name}</TableCell>
-                                    <TableCell>{lead.status}</TableCell>
-                                    <TableCell>{lead.manager}</TableCell>
-                                    <TableCell>{lead.phoneNumber}</TableCell>
-                                    <TableCell>{lead.leadSource}</TableCell>
-                                    <TableCell>${lead.budget.toLocaleString()}</TableCell>
-                                    <TableCell>{lead.lastFollowUp.slice(0, 10)}</TableCell>
+                                    <TableCell>{lead?.leadId}</TableCell>
+                                    <TableCell>{lead?.name}</TableCell>
+                                    <TableCell>{lead?.status}</TableCell>
+                                    <TableCell>{lead?.manager}</TableCell>
+                                    <TableCell>{lead?.phoneNumber}</TableCell>
+                                    <TableCell>{lead?.leadSource}</TableCell>
+                                    <TableCell>${lead?.budget?.toLocaleString()}</TableCell>
+                                    <TableCell>{lead?.lastFollowUp?.slice(0, 10)}</TableCell>
                                     <TableCell>
 
                                         <IconButton

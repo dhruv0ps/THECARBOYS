@@ -240,6 +240,110 @@ const bulkupdates = async (leadIds, categories) => {
   }
 };
 
+const bulkLeads = async(data) => {
+  const results = {
+    successful: [],
+    skipped: []
+  };
+  
+  try {
+    for (let i = 0; i < data.length; i++) {
+      const row = data[i];
+      try {
+        const leadId = await getNextLead();
+        
+        // Handle month logic - set 2025 for Jan, Feb, March and 2024 for other months
+        let monthDate = new Date();
+        if (row["Month"]) {
+          // Create a mapping of month abbreviations to their numeric values (0-based)
+          const monthMap = {
+            "Jan": 0, "Feb": 1, "Mar": 2, "Apr": 3, "May": 4, "Jun": 5,
+            "Jul": 6, "Aug": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dec": 11
+          };
+          
+          const monthNum = monthMap[row["Month"]];
+          if (monthNum !== undefined) {
+            // If month is Jan, Feb, or Mar, use 2025, otherwise use 2024
+            const year = (monthNum <= 2) ? 2025 : 2024;
+            monthDate = new Date(year, monthNum, 1);
+          }
+        }
+        
+        // Parse date strings in format DD-MM-YYYY
+        const parseDate = (dateStr) => {
+          if (!dateStr) return null;
+          
+          const dateString = String(dateStr).trim();
+          if (dateString.includes('-')) {
+            const parts = dateString.split('-');
+            if (parts.length === 3) {
+              const day = parseInt(parts[0], 10);
+              const month = parseInt(parts[1], 10) - 1; // Months are 0-indexed in JS
+              const year = parseInt(parts[2], 10);
+              return new Date(year, month, day);
+            }
+          } 
+          // Also handle slash format as a fallback
+          else if (dateString.includes('/')) {
+            const parts = dateString.split('/');
+            if (parts.length === 3) {
+              const day = parseInt(parts[0], 10);
+              const month = parseInt(parts[1], 10) - 1;
+              const year = parseInt(parts[2], 10);
+              return new Date(year, month, day);
+            }
+          }
+        
+          return null;
+        };
+        
+        const newLead = new Lead({
+          leadId,
+          status: row["Status"] || "New",
+          month: monthDate,
+          manager: row["Manager"] || "",
+          name: row["Name"] || "Unknown",
+          phoneNumber: row["Phone"] || "00000",
+          leadSource: row["Lead Source"] || "Unknown",
+          interestedModels: row["Interested Models"] ? row["Interested Models"].split(",") : [],
+          budget: parseFloat(row["Budget"]) || null,
+          budgetFrom: parseFloat(row["Budget From"]) || null,
+          budgetTo: parseFloat(row["Budget To"]) || null,
+          generalComments: row["Comments"] || "",
+          lastFollowUp: parseDate(row["Last (latest) Follow-up"]),
+          nextFollowUp: parseDate(row["Next Follow-up"]),
+          createdDate: new Date(),
+          updatedDate: new Date(),
+          isActive: true,
+          editHistory: []
+        });
+        
+        await newLead.save();
+        results.successful.push({
+          index: i,
+          name: row["Name"] || "Unknown"
+        });
+      } catch (rowError) {
+        results.skipped.push({
+          index: i,
+          name: row["Name"] || "Unknown",
+          error: rowError.message
+        });
+        console.error(`Error processing row ${i}:`, rowError);
+        // Continue to next row instead of stopping the entire process
+      }
+    }
+    
+    // Log summary of results
+    console.log(`Import completed: ${results.successful.length} leads imported, ${results.skipped.length} rows skipped with errors`);
+    
+    return results;
+  } catch (error) {
+    console.error("Error in bulk import process:", error);
+    throw error; // Re-throw the error for the calling function
+  }
+};
+
 const gettopLead = async (filters = {}) => {
   try {
     const { startDate, endDate, model, year, trim, budgetMin, budgetMax } = filters;
@@ -289,7 +393,7 @@ const gettopLead = async (filters = {}) => {
       { $limit: 7 },
     ]);
 
-    // Aggregate Leads by Status
+  
     const leadsByStatus = await Lead.aggregate([
       { $match: query },
       {
@@ -337,4 +441,4 @@ const gettopLead = async (filters = {}) => {
 
 
 
-module.exports = { createLead, getAllLeads,getSingleId, updateLead, deleteLead,bulkupdates,gettopLead };
+module.exports = { createLead, getAllLeads,getSingleId, updateLead, deleteLead,bulkupdates,gettopLead,bulkLeads };

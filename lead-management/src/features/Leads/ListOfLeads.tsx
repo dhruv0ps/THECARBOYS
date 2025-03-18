@@ -9,10 +9,10 @@ import {
   Paper,
   IconButton,
   CircularProgress,
-  Checkbox
+  Checkbox,Button
   
 } from "@mui/material";
-import { Edit, Delete } from "@mui/icons-material";
+import { Edit, Delete,UploadFile } from "@mui/icons-material";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import debounce from 'lodash/debounce';
@@ -22,6 +22,7 @@ import { FaChevronLeft } from "react-icons/fa";
 import { ArrowDropUp, ArrowDropDown } from "@mui/icons-material";
 import CustomModal from "../../components/CustomModal";
 import BulkUpdateModal from "../../components/BulkUpdateModal";
+import UploadLead from "./upload-lead";
 import { Lead } from "../../models/Lead";
 const ListOfLeads: React.FC = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -32,8 +33,7 @@ const ListOfLeads: React.FC = () => {
   const [priorityFilter, _setPriorityFilter] = useState<string>("");
   const [sortField, setSortField] = useState<keyof Lead>("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 20;
+ 
   const [modelFilter, setModelFilter] = useState<string>(""); 
   const [models, setModels] = useState<string[]>([]);
   const [selectedLeadIds, setSelectedLeadIds] = useState<string[]>([]); 
@@ -43,6 +43,16 @@ const ListOfLeads: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
   const { model } = useParams<{ model: string }>();
+  
+  const [_uploadCount, setUploadCount] = React.useState(0)
+  const [isUploadLeadVisible, setIsUploadLeadVisible] = useState<boolean>(false); 
+  const authToken = localStorage.getItem("authToken");
+
+
+ axios.defaults.headers.common["Authorization"] = `Bearer ${authToken}`;
+  const handleUploadSuccess = () => {
+    setUploadCount((prev) => prev + 1)
+  }
 const openModal = (leadId: string) => {
   setSelectedLeadId(leadId);
   setIsModalOpen(true);
@@ -59,7 +69,8 @@ const handleSendSMS = async (message: string) => {
   try {
     const response = await axios.post(
       `${import.meta.env.VITE_BACKEND_URL}/send-sms/${selectedLeadId}`,
-      { message }
+      { message },
+      { headers: { Authorization: `Bearer ${authToken}` } } 
     );
 
     if (response.status === 201) {
@@ -73,10 +84,12 @@ const handleSendSMS = async (message: string) => {
   }
 };
 useEffect(() => {
-  fetchData();
-  fetchCategories();
-  fetchModels();
-}, [searchQuery, statusFilter, leadSourceFilter,modelFilter, priorityFilter, sortField, sortOrder]);
+  if (!isUploadLeadVisible) {
+    fetchData();
+    fetchCategories();
+    fetchModels();
+  }
+}, [searchQuery, statusFilter, leadSourceFilter, modelFilter, priorityFilter, sortField, sortOrder, isUploadLeadVisible]);
 useEffect(() => {
   if (model) {
     setModelFilter(model);
@@ -84,7 +97,9 @@ useEffect(() => {
 }, [model]);
 const fetchModels = async () => {
   try {
-    const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/models`);
+    const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/models`,{
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
     const data = response.data;
     const fetchedModels = data.map((car: any) => car.model);
     setModels(fetchedModels);
@@ -97,7 +112,9 @@ const fetchModels = async () => {
 const fetchCategories = async () => {
   
   try {
-    const response = await axios.get( `${import.meta.env.VITE_BACKEND_URL}/leadcategory`);
+    const response = await axios.get( `${import.meta.env.VITE_BACKEND_URL}/leadcategory`,{
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
     setCategories(response.data.data);
   } catch (error) {
     console.error("Error fetching categories:", error);
@@ -118,6 +135,7 @@ const fetchData = async () => {
     };
     const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/leads`, {
       params,
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     const activeleads = response.data.data.filter((lead: Lead) => lead.isActive);
    
@@ -132,17 +150,18 @@ const fetchData = async () => {
 const toggleBulkModal = () => {
   setIsBulkModalOpen(!isBulkModalOpen);
 };
-  
+
 const handleBulkUpdateSubmit = async (selectedCategories: string[]) => {
   try {
-    const response = await axios.patch(`${import.meta.env.VITE_BACKEND_URL}/leads/bulk-update`, {
-      leadIds: selectedLeadIds,
-      categories: selectedCategories,
-    });
+    const response = await axios.patch(
+      `${import.meta.env.VITE_BACKEND_URL}/leads/bulk-update`,
+      { leadIds: selectedLeadIds, categories: selectedCategories },
+      { headers: { Authorization: `Bearer ${authToken}` } } 
+    );
     if (response.status === 201) {
       toast.success("Bulk update successful!");
       setSelectedLeadIds([]);
-      fetchData(); 
+      fetchData();
     }
   } catch (error) {
     console.error("Error during bulk update:", error);
@@ -161,24 +180,31 @@ const handleBulkUpdateSubmit = async (selectedCategories: string[]) => {
 
   const debouncedSearch = debounce((query: string) => {
     setSearchQuery(query);
-    setCurrentPage(1); 
+    
   }, 500);
 
  
-  const filteredLeads = leads
+ const filteredLeads = leads.sort((a, b) => {
+  let aField = sortField === "lastFollowUp" ? new Date(a.lastFollowUp || 0) : a[sortField];
+  let bField = sortField === "lastFollowUp" ? new Date(b.lastFollowUp || 0) : b[sortField];
 
-    .sort((a, b) => {
-      const aField = sortField === "lastFollowUp" ? new Date(a.lastFollowUp) : a[sortField] as string | number;
-      const bField = sortField === "lastFollowUp" ? new Date(b.lastFollowUp) : b[sortField] as string | number;
-    
-      if (aField < bField) return sortOrder === "asc" ? -1 : 1;
-      if (aField > bField) return sortOrder === "asc" ? 1 : -1;
-      return 0;
-    });
-  const paginatedLeads = filteredLeads.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // Ensure undefined values are handled
+  if (aField == null) return sortOrder === "asc" ? 1 : -1;
+  if (bField == null) return sortOrder === "asc" ? -1 : 1;
+
+  // Convert to lowercase if string
+  if (typeof aField === "string" && typeof bField === "string") {
+    aField = aField.toLowerCase();
+    bField = bField.toLowerCase();
+  }
+
+  if (aField < bField) return sortOrder === "asc" ? -1 : 1;
+  if (aField > bField) return sortOrder === "asc" ? 1 : -1;
+  return 0;
+});
+
+  
+
   const handleDelete = async (id: string) => {
     const confirm = await showConfirmationModal("Are you sure you want to Archive the lead?");
     if (!confirm) return;
@@ -213,8 +239,23 @@ const handleBulkUpdateSubmit = async (selectedCategories: string[]) => {
     }
     return <ArrowDropUp fontSize="small" style={{ color: "white", opacity: 1 }} />;
   };
+ 
 
+  const toggleUploadLead = () => {
+    setIsUploadLeadVisible(!isUploadLeadVisible);
+  };
   return (
+    <>
+      {isUploadLeadVisible ? (
+        <UploadLead
+          onUploadSuccess={() => {
+            handleUploadSuccess();
+            setIsUploadLeadVisible(false); 
+            fetchData(); 
+          }}
+          apiUrl={`${import.meta.env.VITE_BACKEND_URL}/lead/bulkupload`}
+        />
+      ) : (
     <div style={{ padding: "20px" 
        }} className="overflow-x-auto">
           <div className="flex items-center justify-between mb-4">
@@ -226,9 +267,17 @@ const handleBulkUpdateSubmit = async (selectedCategories: string[]) => {
         <FaChevronLeft size={16} style={{ color: "white" }} />
         <span style={{ color: "white" }}>Back</span>
       </button>
-
-      {/* Add New Lead Button */}
+    
       <div className="flex flex-wrap gap-4  justify-end md:justify-end">
+        
+      <Button
+            variant="contained"
+            startIcon={<UploadFile />}
+            style={{ backgroundColor: "black", color: "white" }}
+            onClick={toggleUploadLead}
+          >
+            {isUploadLeadVisible ? "Back to List" : "Bulk Upload Leads"}
+          </Button>
       <button
     onClick={toggleBulkModal}
     className="px-4 py-2  bg-black text-white rounded-md"
@@ -396,11 +445,9 @@ const handleBulkUpdateSubmit = async (selectedCategories: string[]) => {
     <TableCell style={{ color: "white", fontWeight: "bold" }}>Manager</TableCell>
     <TableCell style={{ color: "white", fontWeight: "bold" }}>Phone Number</TableCell>
     <TableCell style={{ color: "white", fontWeight: "bold" }}>Lead Source</TableCell>
-    {/* <TableCell style={{ color: "white", fontWeight: "bold" }}>Budget</TableCell> */}
-
-    {/* Last Follow-Up Header with Sort Arrow */}
+   
     <TableCell
-      style={{ color: "white", fontWeight: "bold", cursor: "pointer" }} // Always pointer
+      style={{ color: "white", fontWeight: "bold", cursor: "pointer" }} 
       onClick={() => handleSort("nextFollowUp")}
     >
       Next Follow-Up {getSortIcon("nextFollowUp")}
@@ -421,8 +468,8 @@ const handleBulkUpdateSubmit = async (selectedCategories: string[]) => {
 ) : (
   
   <TableBody>
-  {paginatedLeads.length > 0 ? (
-    paginatedLeads.map((lead) => (
+  {filteredLeads.length > 0 ? (
+    filteredLeads.map((lead) => (
       <TableRow key={lead.id}>
         <TableCell padding="checkbox">
           <Checkbox
@@ -431,7 +478,7 @@ const handleBulkUpdateSubmit = async (selectedCategories: string[]) => {
           />
         </TableCell>
         <TableCell>{lead.leadId}</TableCell>
-        <TableCell>{lead.lastFollowUp.slice(0, 10)}</TableCell>
+        <TableCell>{lead?.lastFollowUp?.slice(0, 10)}</TableCell>
         <TableCell>{lead.name}</TableCell>
         <TableCell>
           <select
@@ -472,7 +519,7 @@ const handleBulkUpdateSubmit = async (selectedCategories: string[]) => {
         <TableCell>{lead.phoneNumber}</TableCell>
         <TableCell>{lead.leadSource}</TableCell>
         {/* <TableCell>${lead.budget.toLocaleString()}</TableCell> */}
-        <TableCell>{lead.nextFollowUp.slice(0, 10)}</TableCell>
+        <TableCell>{lead?.nextFollowUp?.slice(0, 10)}</TableCell>
         <TableCell>{lead.interestedModels.join(", ")}</TableCell>
         <TableCell>
           <IconButton
@@ -541,6 +588,8 @@ const handleBulkUpdateSubmit = async (selectedCategories: string[]) => {
         style={{ display: "flex", justifyContent: "center", marginTop: "16px" }}
       /> */}
     </div>
+      )}
+    </>
   );
 };
 

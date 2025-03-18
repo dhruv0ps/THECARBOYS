@@ -18,6 +18,7 @@ import axios from "axios";
 import showConfirmationModal from "../../components/confirmationUtil";
 import { toast } from "react-toastify";
 import { FaChevronLeft } from "react-icons/fa";
+import UploadVehicles from "./UploadVehicles";
 type Car = {
   city_mpg: number;
   class: string;
@@ -53,8 +54,9 @@ const CarList: React.FC = () => {
 
   const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 50;
+  
+  const [isUploadLeadVisible, setIsUploadLeadVisible] = useState<boolean>(false); 
+  
 
   useEffect(() => {
 
@@ -64,14 +66,20 @@ const CarList: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/vehicles`);
+      const authToken = localStorage.getItem("authToken");
+    
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/vehicles`,{
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
       const data: Car[] = response.data;
 
       // Sort by status: "available" first
       const sortedData = data.sort((a, b) => {
         if (a.status === "Available" && b.status !== "Available") return -1;
         if (a.status !== "Available" && b.status === "Available") return 1;
-        return 0; // Maintain existing order for cars with the same status
+        return 0; 
       });
 
       setCars(sortedData);
@@ -107,7 +115,7 @@ const CarList: React.FC = () => {
     if (transmissionFilter) {
       filtered = filtered.filter(car => car.transmission.toLowerCase() === transmissionFilter.toLowerCase());
     }
-    console.log(paginatedData);
+    
     // Apply sorting if a field is selected
     if (sortField) {
       filtered = filtered.sort((a, b) => {
@@ -127,15 +135,12 @@ const CarList: React.FC = () => {
 
 
     setFilteredCars(filtered);
-    setCurrentPage(1);
+   
   }, [searchQuery, yearFilter, fuelTypeFilter, transmissionFilter, statusFilter, sortField, sortOrder, cars]);
 
-  // const totalPages = Math.ceil(filteredCars.length / itemsPerPage);
-  const paginatedData = filteredCars.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  // const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
-  //   setCurrentPage(page);
-  // };
+
+  
 
 
 
@@ -144,7 +149,12 @@ const CarList: React.FC = () => {
     if (!confirm) return;
 
     try {
-      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/vehicles/${id}`);
+      const authToken = localStorage.getItem("authToken");
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/vehicles/${id}`,{
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
       toast.success("Car deleted successfully!");
       await fetchData();
     } catch (error) {
@@ -172,7 +182,11 @@ const CarList: React.FC = () => {
   if (error) return <p>Error: {error}</p>;
 
   return (
+    <>
+     {isUploadLeadVisible ? (    <UploadVehicles    apiUrl={`${import.meta.env.VITE_BACKEND_URL}/vehicle-bulkupload`}
+        />):(
     <div style={{ padding: "20px" }}>
+ 
       <div className="flex items-center justify-between mb-4">
         {/* Back Button */}
         <button
@@ -184,13 +198,24 @@ const CarList: React.FC = () => {
         </button>
 
         {/* Add New Lead Button */}
-        <button
-          onClick={() => navigate("/inventory/add")}
-          className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
-        >
-          Add New Car
-        </button>
-      </div>
+        <div className="flex gap-2">
+            {/* Upload Vehicles Button */}
+            <button
+              onClick={() => setIsUploadLeadVisible(true)}
+              className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
+            >
+              Upload Vehicles
+            </button>
+
+            {/* Add New Car Button */}
+            <button
+              onClick={() => navigate("/inventory/add")}
+              className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800"
+            >
+              Add New Car
+            </button>
+          </div>
+        </div>
       <div className="container mx-auto p-4">
         <h2 className="text-2xl font-semibold mb-4">Car List</h2>
 
@@ -292,7 +317,7 @@ const CarList: React.FC = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedData.map((car, index) => (
+                filteredCars.map((car, index) => (
                   <TableRow key={index} hover>
                     <TableCell className="whitespace-nowrap overflow-hidden text-ellipsis max-w-xs">
                       {car.vehicleId}
@@ -353,7 +378,8 @@ const CarList: React.FC = () => {
           style={{ display: "flex", justifyContent: "center", marginTop: "16px" }}
         /> */}
       </div>
-    </div>
+    </div>)}
+    </>
   );
 };
 

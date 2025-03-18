@@ -28,33 +28,62 @@ export default function LeadCategoryModal(): JSX.Element {
   }, []);
 
   const fetchCategories = async () => {
+    const authToken = localStorage.getItem("authToken");
+  
+    if (!authToken) {
+      console.error("Unauthorized: No auth token found.");
+      navigate("/login");
+      return;
+    }
+  
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/leadcategory`
-      );
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/leadcategory`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
       setCategories(response.data.data);
     } catch (error) {
       console.error("Error fetching lead categories:", error);
     }
   };
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const authToken = localStorage.getItem("authToken");
+  
+    if (!authToken) {
+      console.error("Unauthorized: No auth token found.");
+      navigate("/login");
+      return;
+    }
+  
     try {
+      let response;
       if (currentEdit) {
-        const response = await axios.put(
+        response = await axios.put(
           `${import.meta.env.VITE_BACKEND_URL}/updatecategory/${currentEdit}`,
-          formData
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
         );
         console.log("Updated category:", response.data);
       } else {
-        const response = await axios.post(
+        response = await axios.post(
           `${import.meta.env.VITE_BACKEND_URL}/leadcategory/add`,
-          formData
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
         );
         console.log("Added category:", response.data);
       }
-
+  
       setFormData({ leadcategory: "" });
       setCurrentEdit(null);
       setIsModalOpen(false);
@@ -63,6 +92,7 @@ export default function LeadCategoryModal(): JSX.Element {
       console.error("Error submitting form:", error);
     }
   };
+  
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setFormData({ ...formData, leadcategory: e.target.value });
@@ -75,17 +105,30 @@ export default function LeadCategoryModal(): JSX.Element {
   };
 
   const handleDelete = async (id: string) => {
-    const confirm = await showConfirmationModal("Are you sure want to delete");
-    if(!confirm) return
-
+    const confirm = await showConfirmationModal("Are you sure you want to delete?");
+    if (!confirm) return;
+  
+    const authToken = localStorage.getItem("authToken");
+  
+    if (!authToken) {
+      console.error("Unauthorized: No auth token found.");
+      navigate("/login");
+      return;
+    }
+  
     try {
-      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/leadcategory/${id}`);
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/leadcategory/${id}`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
       console.log("Deleted category with ID:", id);
       fetchCategories();
     } catch (error) {
       console.error("Error deleting category:", error);
     }
   };
+  
 
   return (
     <div className="p-4">

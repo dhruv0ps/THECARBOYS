@@ -57,7 +57,11 @@ const AddNewCarForm: React.FC = () => {
   const fetchUpdatedCar = async (id: string) => {
     setIsLoading(true);
     try {
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/vehicles/${id}`);
+      const authToken = localStorage.getItem("authToken");
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/vehicles/${id}`,{
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        }});
       const carData = response.data;
 
       // Pre-fill form fields with fetched data
@@ -80,28 +84,49 @@ const AddNewCarForm: React.FC = () => {
   const onSubmit = async (data: FormData) => {
     try {
       setIsLoading(true);
-
-      // Convert inspectionDate back to ISO format if it exists
+      const authToken = localStorage.getItem("authToken");
+  
+      if (!authToken) {
+        toast.error("Unauthorized. Please log in.");
+        navigate("/login");
+        return;
+      }
+  
+      // Convert inspectionDate to ISO format
       if (data.inspectionDate) {
         data.inspectionDate = new Date(data.inspectionDate).toISOString();
       }
-
+  
       if (id) {
-        // Update car
-        await axios.put(`${import.meta.env.VITE_BACKEND_URL}/vehicles/${id}`, data);
-        toast.success('Car details updated successfully!');
+        
+         await axios.put(
+          `${import.meta.env.VITE_BACKEND_URL}/vehicles/${id}`,
+          data,
+          {
+            headers: { Authorization: `Bearer ${authToken}` },
+          }
+        );
+        toast.success("Car details updated successfully!");
       } else {
         // Add new car
-        await axios.post(`${import.meta.env.VITE_BACKEND_URL}/vehicles/add`, data);
-        toast.success('New car added successfully!');
+     await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/vehicles/add`,
+          data,
+          {
+            headers: { Authorization: `Bearer ${authToken}` },
+          }
+        );
+        toast.success("New car added successfully!");
       }
-      navigate('/inventory/view'); // Navigate back to the list
+  
+      navigate("/inventory/view");
     } catch (error) {
-      toast.error('Failed to save car details. Please try again.');
+      toast.error("Failed to save car details. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
+  
 
   return (
     <div>

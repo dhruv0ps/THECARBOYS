@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Button, Label, TextInput, Select, Textarea, Checkbox, Spinner } from "flowbite-react";
-import MultiSelectDropdown from "../../components/Multipleselect";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
 import { FaChevronLeft } from "react-icons/fa";
-import { Car } from "../../models/Car";
+
 import ObjectMultiSelectDropdown from "../../components/ObjectMultiSelectDropdown";
+import MakeDropdown from "../../util/MakeDropdown";
 type Lead = {
   id: string;
   status: string;
@@ -34,7 +34,7 @@ type Lead = {
   dlstatus?:string;
   budgetFrom?:number;
   budgetTo?:number 
-
+  make? :string
 };
 
 const LeadForm: React.FC = () => {
@@ -55,29 +55,18 @@ const LeadForm: React.FC = () => {
   const [_isFetching, setIsFetching] = useState(false); // To handle loading for fetching data
   const formatToDateInput = (isoString: string | undefined) =>
     isoString ? isoString.split("T")[0] : ""; // Extract YYYY-MM-DD part
-  // const models = ["Mustang", "Civic", "Accord", "Camry", "Corolla"];
-  const [models, setModels] = useState<string[]>([]);
-  const priorities = ["High", "Medium", "Low"];
 
+  const priorities = ["High", "Medium", "Low"];
+  const [selectedMake, setSelectedMake] = useState<string | null>(null);
   // Fetch data if an ID exists (for editing)
   useEffect(() => {
     if (id) {
       fetchLeadData();
     }
     fetchLeadCategory();
-    fetchModels();
+    
   }, [id]);
-  const fetchModels = async () => {
-    try {
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/vehicles`);
-      const data: Car[] = response.data; 
-      const fetchedModels = data.map((car) =>  `${car.model}`);
-      setModels(fetchedModels);
-    } catch (error) {
-      console.error("Error fetching models:", error);
-      toast.error("Failed to fetch models. Please try again.");
-    }
-  };
+ 
   const fetchLeadCategory = async () => {
     try {
       const response = await axios.get(
@@ -155,6 +144,13 @@ const LeadForm: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+  const handleInterestedModelsChange = (value: string) => {
+    const modelsArray = value.split(",").map((model) => model.trim()); // Convert input to an array
+    setLead((prevLead) => ({
+      ...prevLead,
+      interestedModels: modelsArray,
+    }));
   };
 
   return (
@@ -279,24 +275,23 @@ const LeadForm: React.FC = () => {
             ))}
           </Select>
         </div>
-
-        {/* Interested Models */}
-        <div className="space-y-2 ">
-          <Label htmlFor="interestedModels">Interested Models</Label>
-          {/* <Select
-            id="interestedModels"
-            value={lead.interestedModels || []}
-            onChange={(e) => handleChange('interestedModels', Array.isArray(e.target.value) ? e.target.value : [e.target.value])}
-            multiple
-          >
-            <option>Select models</option>
-            {['Mustang', 'Civic', 'Accord'].map((model) => (
-              <option key={model} value={model}>{model}</option>
-            ))}
-          </Select> */}
-                <MultiSelectDropdown options={models} value={lead.interestedModels || []}  placeholder="Select models"    onChange={(selectedModels) => handleChange('interestedModels', selectedModels)}/>
-
-        </div>
+        <div className="space-y-2 "><Label htmlFor="interestedMake">Intersted Make</Label>
+        <MakeDropdown value = {selectedMake} onChange={setSelectedMake}/>
+          </div>
+        
+        <div className="space-y-2">
+              <Label htmlFor="interestedModels">Interested Models</Label>
+              <TextInput
+                type="text"
+                id="interestedModels"
+                value={lead.interestedModels?.join(", ") || ""}
+                onChange={(e) => handleInterestedModelsChange(e.target.value)}
+                placeholder="Enter Models"
+              />
+            
+            </div>
+         
+      
         <div className="space-y-2 col-span-full">
           <Label htmlFor="lead categories">Lead Categoreis</Label>
         <ObjectMultiSelectDropdown
