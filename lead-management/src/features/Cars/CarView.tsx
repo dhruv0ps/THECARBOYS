@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Spinner } from "flowbite-react";
+import { CircularProgress } from "@mui/material";
 import {
   Table,
   TableBody,
@@ -178,7 +179,13 @@ const CarList: React.FC = () => {
     }
     return <ArrowDropUp fontSize="small" style={{ color: "white", opacity: 1 }} />;
   };
-  if (loading) return <p>Loading...</p>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <CircularProgress style={{ color: "black" }} size={60} />
+      </div>
+    );
+  }
   if (error) return <p>Error: {error}</p>;
 
   return (

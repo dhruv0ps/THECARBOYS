@@ -89,12 +89,14 @@ const LeadForm: React.FC = () => {
     setLead({
       ...data,
        leadCategories: data.leadcategory.map(
-        (category: { leadcategory: string }) => category.leadcategory // Extract IDs
+        (category: { leadcategory: string }) => category.leadcategory 
       ),
+      
       month: data.month ? data.month.slice(0, 7) : "",
       lastFollowUp: formatToDateInput(data.lastFollowUp),
       nextFollowUp: formatToDateInput(data.nextFollowUp),
     });
+    setSelectedMake(response.data.data.make)
       console.log(response.data)
     } catch (error) {
       console.error("Failed to fetch lead data:", error);
@@ -117,7 +119,7 @@ const LeadForm: React.FC = () => {
     
     try {
        const { leadcategory, ...payload } = lead;
-
+       payload.make = selectedMake || undefined;
       if (id) {
         const response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/leads/${id}`, payload);
         if (response.status === 200) {
@@ -135,6 +137,7 @@ const LeadForm: React.FC = () => {
             tradeInOption: false,
             priorityLevel: "Medium",
             interestedModels: [],
+          
           });
         }
       }

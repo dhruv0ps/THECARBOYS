@@ -62,7 +62,7 @@ const Dashboard: React.FC = () => {
   const fetchDashboardData = async () => {
     setIsLoading(true);
     const authToken = localStorage.getItem("authToken");
-    
+  
     if (!authToken) {
       toast.error("Unauthorized. Please log in.");
       navigate("/login");
@@ -92,13 +92,20 @@ const Dashboard: React.FC = () => {
       setTopCarLeads(topCarLeads || []);
       setBudgetData(budgetData || []);
       setTotalLeads(totalLeads || 0);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching dashboard data:", error);
-      toast.error("Failed to fetch dashboard data.");
+      if (error.response?.data?.error == "Please login again to proceed") {
+        toast.error("Session expired. Please log in again.");
+        localStorage.removeItem("authToken"); 
+        navigate("/login");
+      } else {
+        toast.error("Failed to fetch dashboard data.");
+      }
     } finally {
       setIsLoading(false);
     }
   };
+  
   
 
   const fetchVehicles = async () => {
@@ -117,11 +124,18 @@ const Dashboard: React.FC = () => {
         },
       });
       setVehicles(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching vehicles:", error);
-      toast.error("Failed to fetch vehicles.");
+      if (error.response?.data?.error == "Please login again to proceed") {
+        toast.error("Session expired. Please log in again.");
+        localStorage.removeItem("authToken"); // Clear auth token
+        navigate("/login");
+      } else {
+        toast.error("Failed to fetch vehicles.");
+      }
     }
   };
+  
   
 
   const models = [...new Set(vehicles.map((vehicle) => vehicle.model))];
