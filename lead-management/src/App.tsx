@@ -91,6 +91,14 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "/users/:id",
+        element: (
+          <ProtectedRoute>
+            <UserForm />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: "/leads/view",
         element: (
           <ProtectedRoute>

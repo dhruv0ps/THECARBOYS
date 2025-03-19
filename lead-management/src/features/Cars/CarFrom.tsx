@@ -84,44 +84,56 @@ const AddNewCarForm: React.FC = () => {
   const onSubmit = async (data: FormData) => {
     try {
       setIsLoading(true);
-      const authToken = localStorage.getItem("authToken");
-  
+      const authToken = localStorage.getItem('authToken');
+      
       if (!authToken) {
-        toast.error("Unauthorized. Please log in.");
-        navigate("/login");
+        toast.error('Unauthorized. Please log in.');
+        navigate('/login');
         return;
       }
-  
-      // Convert inspectionDate to ISO format
+      
       if (data.inspectionDate) {
         data.inspectionDate = new Date(data.inspectionDate).toISOString();
       }
-  
+      
+      let response;
       if (id) {
+        response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/vehicles/${id}`, data, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
         
-         await axios.put(
-          `${import.meta.env.VITE_BACKEND_URL}/vehicles/${id}`,
-          data,
-          {
-            headers: { Authorization: `Bearer ${authToken}` },
-          }
-        );
-        toast.success("Car details updated successfully!");
+        if (response.data.status === true || response.status === 200) {
+          toast.success('Car details updated successfully!');
+          navigate('/inventory/view');
+        } else {
+          
+          const errorMessage = response.data.err || response.data.data?.err || "Failed to update car details. Please try again.";
+          toast.error(errorMessage);
+        }
       } else {
-        // Add new car
-     await axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/vehicles/add`,
-          data,
-          {
-            headers: { Authorization: `Bearer ${authToken}` },
-          }
-        );
-        toast.success("New car added successfully!");
+        response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/vehicles/add`, data, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        
+        if (response.data.status === true || response.status === 201 || response.status === 200) {
+          toast.success('New car added successfully!');
+          navigate('/inventory/view');
+        } else {
+         
+          const errorMessage = response.data.err || response.data.data?.err || "Failed to add new car. Please try again.";
+          toast.error(errorMessage);
+        }
       }
-  
-      navigate("/inventory/view");
-    } catch (error) {
-      toast.error("Failed to save car details. Please try again.");
+    } catch (error: any) {
+     
+      const errorMessage = 
+        error.response?.data?.err || 
+        error.response?.data?.data?.err || 
+        error.message || 
+        "Failed to save car details. Please try again.";
+      
+      console.error("Error saving vehicle details:", error);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -193,21 +205,21 @@ const AddNewCarForm: React.FC = () => {
                 <option value="Convertible">Convertible</option>
                 <option value="Minivan">Minivan</option>
               </Select>
-              {errors.bodyType && <p className="text-red-500">{errors.bodyType.message}</p>}
+              
             </div>
 
             {/* Color */}
             <div>
               <Label htmlFor="color" value="Color" />
               <TextInput id="color" placeholder="e.g. Red" {...register('color', { required: 'Color is required' })} />
-              {errors.color && <p className="text-red-500">{errors.color.message}</p>}
+             
             </div>
 
             {/* Mileage */}
             <div>
               <Label htmlFor="mileage" value="Mileage" />
               <TextInput id="mileage" placeholder="e.g. 15000" {...register('mileage', { required: 'Mileage is required', pattern: { value: /^\d+$/, message: 'Mileage must be a number' } })} />
-              {errors.mileage && <p className="text-red-500">{errors.mileage.message}</p>}
+           
             </div>
 
             {/* Engine Type */}
@@ -220,7 +232,7 @@ const AddNewCarForm: React.FC = () => {
                 <option value="Hybrid">Hybrid</option>
                 <option value="Electric">Electric</option>
               </Select>
-              {errors.engineType && <p className="text-red-500">{errors.engineType.message}</p>}
+             
             </div>
 
             <div>
@@ -253,7 +265,7 @@ const AddNewCarForm: React.FC = () => {
                 <option value="AWD">AWD</option>
                 <option value="4WD">4WD</option>
               </Select>
-              {errors.drivetrain && <p className="text-red-500">{errors.drivetrain.message}</p>}
+              
             </div>
 
             {/* Condition */}
@@ -265,20 +277,20 @@ const AddNewCarForm: React.FC = () => {
                 <option value="Used">Used</option>
                 <option value="Certified Pre-Owned">Certified Pre-Owned</option>
               </Select>
-              {errors.condition && <p className="text-red-500">{errors.condition.message}</p>}
+              
             </div>
 
             <div>
               <Label htmlFor="price" value="Price" />
               <TextInput id="price" placeholder="e.g. 25000" {...register('price', { required: 'Price is required', pattern: { value: /^\d+(\.\d{1,2})?$/, message: 'Price must be a valid number' } })} />
-              {errors.price && <p className="text-red-500">{errors.price.message}</p>}
+             
             </div>
 
             {/* Cost */}
             <div>
               <Label htmlFor="cost" value="Cost" />
               <TextInput id="cost" placeholder="e.g. 20000" {...register('cost', { required: 'Cost is required', pattern: { value: /^\d+(\.\d{1,2})?$/, message: 'Cost must be a valid number' } })} />
-              {errors.cost && <p className="text-red-500">{errors.cost.message}</p>}
+              
             </div>
 
             <div>
@@ -290,7 +302,7 @@ const AddNewCarForm: React.FC = () => {
                 <option value="Sold">Sold</option>
 
               </Select>
-              {errors.status && <p className="text-red-500">{errors.status.message}</p>}
+             
             </div>
 
             {/* Location */}
@@ -318,19 +330,19 @@ const AddNewCarForm: React.FC = () => {
                   </div>
                 ))}
               </div>
-              {errors.features && <p className="text-red-500">{errors.features.message}</p>}
+          
             </div>
             <div className="col-span-2">
               <Label htmlFor="warranty" value="Warranty" />
               <Textarea id="warranty" placeholder="Warranty details or service contracts" {...register('warranty')} />
-              {errors.warranty && <p className="text-red-500">{errors.warranty.message}</p>}
+           
             </div>
 
             {/* Inspection Date */}
             <div>
               <Label htmlFor="inspectionDate" value="Inspection Date" />
               <TextInput type="date" id="inspectionDate" {...register('inspectionDate')} />
-              {errors.inspectionDate && <p className="text-red-500">{errors.inspectionDate.message}</p>}
+             
             </div>
 
             {/* Date Added to Inventory */}
@@ -344,14 +356,14 @@ const AddNewCarForm: React.FC = () => {
             <div>
               <Label htmlFor="dateSold" value="Date Sold" />
               <TextInput type="date" id="dateSold" {...register('dateSold')} />
-              {errors.dateSold && <p className="text-red-500">{errors.dateSold.message}</p>}
+              
             </div>
 
             {/* Notes */}
             <div className="col-span-2">
               <Label htmlFor="notes" value="Notes" />
               <Textarea id="notes" placeholder="Any additional information about the car" {...register('notes')} />
-              {errors.notes && <p className="text-red-500">{errors.notes.message}</p>}
+          
             </div>
           </div>
 

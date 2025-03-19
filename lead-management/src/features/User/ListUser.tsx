@@ -15,9 +15,10 @@ import { Edit, Delete } from "@mui/icons-material";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FaChevronLeft } from 'react-icons/fa';
-
+import showConfirmationModal from "../../components/confirmationUtil";
+import { toast } from "react-toastify";
 type User = {
-  id: number;
+  _id: number;
   username: string;
   role: string;
   email: string;
@@ -34,7 +35,7 @@ const UserTable: React.FC = () => {
   const navigate = useNavigate();
   const rowsPerPage = 5;
 
-  const authToken = localStorage.getItem("authToken"); // Get auth token
+  const authToken = localStorage.getItem("authToken"); 
 
   useEffect(() => {
     fetchUsers();
@@ -47,7 +48,7 @@ const UserTable: React.FC = () => {
   const fetchUsers = async () => {
     try {
       const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/user`, {
-        headers: { Authorization: `Bearer ${authToken}` } // Add auth token to request
+        headers: { Authorization: `Bearer ${authToken}` } 
       });
       setUsers(response.data.data);
     } catch (error) {
@@ -93,16 +94,28 @@ const UserTable: React.FC = () => {
 
   const handleEdit = (id: number) => {
     console.log("Edit user with ID:", id);
+    navigate(`/users/${id}`);
   };
 
   const handleDelete = async (id: number) => {
+    const confirm = await showConfirmationModal("Are you sure you want to delete the user?");
+    if (!confirm) return;
+
     try {
-      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/user/${id}`, {
-        headers: { Authorization: `Bearer ${authToken}` } // Add auth token to request
+      const response = await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/user/${id}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
       });
-      setUsers(users.filter(user => user.id !== id));
-      console.log("Deleted user with ID:", id);
-    } catch (error) {
+    console.log(response)
+      
+      if(response.status == 200) {
+        setUsers((prevUsers) => prevUsers.filter((user) => user._id !== id));
+        toast.success("User deleted successfully!");
+      }
+    } catch (error: any) {
+    
+      const errorMessage =
+        error.response?.data?.message || "Failed to delete user. Please try again.";
+      toast.error(errorMessage);
       console.error("Error deleting user:", error);
     }
   };
@@ -159,8 +172,7 @@ const UserTable: React.FC = () => {
           >
             <option value="">All Roles</option>
             <option value="ADMIN">Admin</option>
-            <option value="user">User</option>
-            <option value="Associate1">Associate1</option>
+           
           </select>
         </div>
       </div>
@@ -186,15 +198,15 @@ const UserTable: React.FC = () => {
             </TableHead>
             <TableBody>
               {paginatedData.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow key={user._id}>
                   <TableCell>{user.username}</TableCell>
                   <TableCell>{user.role}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell align="center">
-                    <IconButton color="primary" onClick={() => handleEdit(user.id)}>
+                    <IconButton color="primary" onClick={() => handleEdit(user._id)}>
                       <Edit />
                     </IconButton>
-                    <IconButton color="secondary" onClick={() => handleDelete(user.id)}>
+                    <IconButton color="secondary" onClick={() => handleDelete(user._id)}>
                       <Delete />
                     </IconButton>
                   </TableCell>

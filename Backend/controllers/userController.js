@@ -85,6 +85,19 @@ const loginUser = async (req, res, next) => {
         return res.status(400).json({ status: false, data: {}, err: error })
     }
 }
+const deleteUser = async(req,res) => {
+    try {
+        
+        const user = await userServices.deleteUse(req.params.id);
+        if (user) {
+            return res.status(200).json({ status: true, data: user, err: {} });
+        } else {
+            return res.status(401).json({ status: false, data: {}, err: 'User not found' });
+        }
+    } catch (error) {
+        return res.json({ status: false, data: {}, err: error.message });
+    }
+}
 
 module.exports = {
     createUser,
@@ -93,5 +106,6 @@ module.exports = {
     getAllUsers,
     logoutUser,
     getCurrentUser,
-    loginUser
+    loginUser,
+    deleteUser
 };

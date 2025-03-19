@@ -24,6 +24,7 @@ router.get('/user/:id', authenticateTokenAdmin, userController.getUser);
 router.get('/user/', authenticateTokenAdmin, userController.getAllUsers);
 router.post('/user/', authenticateTokenAdmin, userController.createUser);
 router.post('/user/:id', authenticateTokenAdmin, userController.updateUser);
+router.delete('/user/:id', authenticateTokenAdmin, userController.deleteUser);
 
 // lead api
 
@@ -55,4 +56,3 @@ router.get("/models",authenticateTokenAdmin,vehicelController.getuniqueVehicles)
 //sms
 
 
-router.post("/send-sms/:id",twiloController.sendSMS);

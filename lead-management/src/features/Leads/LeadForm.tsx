@@ -69,13 +69,19 @@ const LeadForm: React.FC = () => {
  
   const fetchLeadCategory = async () => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/leadcategory`
-      );
+      const authToken = localStorage.getItem("authToken");
+      if (!authToken) {
+        toast.error("Unauthorized! Please log in again.");
+        navigate("/login");
+        return;
+      }
+  
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/leadcategory`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
       const categories = response.data.data;
-
-   
-      setLeadCategories(categories); // Set available categories
+  
+      setLeadCategories(categories);
     } catch (error) {
       console.error("Error fetching lead categories:", error);
     }
@@ -84,7 +90,15 @@ const LeadForm: React.FC = () => {
   const fetchLeadData = async () => {
     setIsFetching(true);
     try {
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/leads/${id}`);
+      const authToken = localStorage.getItem("authToken"); 
+      if (!authToken) {
+        toast.error("Unauthorized! Please log in again.");
+        navigate("/login");
+        return;
+      }
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/leads/${id}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
       const data = response.data.data;
     setLead({
       ...data,
@@ -116,19 +130,46 @@ const LeadForm: React.FC = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+  
     try {
-       const { leadcategory, ...payload } = lead;
-       payload.make = selectedMake || undefined;
+      const authToken = localStorage.getItem("authToken"); // Retrieve the token
+      if (!authToken) {
+        toast.error("Unauthorized! Please log in again.");
+        navigate("/login");
+        return;
+      }
+  
+      const { leadcategory, ...payload } = lead;
+      payload.make = selectedMake || undefined;
+  
+      let response;
       if (id) {
-        const response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/leads/${id}`, payload);
-        if (response.status === 200) {
+        response = await axios.put(
+          `${import.meta.env.VITE_BACKEND_URL}/leads/${id}`,
+          payload,
+          {
+            headers: { Authorization: `Bearer ${authToken}` }, 
+          }
+        );
+        if (response.data.status === true || response.status === 200) {
           toast.success("Lead updated successfully");
           navigate("/leads/view");
+        } else {
+          const errorMessage =
+            response.data.err ||
+            response.data.data?.err ||
+            "Failed to update lead. Please try again.";
+          toast.error(errorMessage);
         }
       } else {
-        const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/addlead`, payload);
-        if (response.status === 201) {
+        response = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/addlead`,
+          payload,
+          {
+            headers: { Authorization: `Bearer ${authToken}` }, // Add auth header
+          }
+        );
+        if (response.data.status === true || response.status === 201) {
           toast.success("Lead saved successfully");
           navigate("/leads/view");
           setLead({
@@ -137,19 +178,29 @@ const LeadForm: React.FC = () => {
             tradeInOption: false,
             priorityLevel: "Medium",
             interestedModels: [],
-          
           });
+        } else {
+          const errorMessage =
+            response.data.err ||
+            response.data.data?.err ||
+            "Failed to save lead. Please try again.";
+          toast.error(errorMessage);
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.err ||
+        error.response?.data?.data?.err ||
+        error.message ||
+        "Failed to save lead. Please try again.";
       console.error("Error saving lead:", error);
-      toast.error("Failed to save lead. Please try again.");
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
   const handleInterestedModelsChange = (value: string) => {
-    const modelsArray = value.split(",").map((model) => model.trim()); // Convert input to an array
+    const modelsArray = value.split(",").map((model) => model.trim()); 
     setLead((prevLead) => ({
       ...prevLead,
       interestedModels: modelsArray,

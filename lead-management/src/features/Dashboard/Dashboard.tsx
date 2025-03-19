@@ -128,7 +128,8 @@ const Dashboard: React.FC = () => {
       console.error("Error fetching vehicles:", error);
       if (error.response?.data?.error == "Please login again to proceed") {
         toast.error("Session expired. Please log in again.");
-        localStorage.removeItem("authToken"); // Clear auth token
+        localStorage.removeItem("authToken"); 
+        localStorage.removeItem("userId")
         navigate("/login");
       } else {
         toast.error("Failed to fetch vehicles.");

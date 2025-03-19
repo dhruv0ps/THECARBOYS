@@ -16,29 +16,35 @@ const LoginPage: React.FC = () => {
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
-
+  
     try {
       const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/loginUser`, {
         email,
         password,
       });
-console.log(response.data)
-      const token = response.data.data.token;
-
-      if (token) {
-        localStorage.setItem('authToken', token);
-        toast.success('Login successful!');
-        navigate('/');
+  
+      console.log(response.data);
+  
+      const { user, token } = response.data.data; 
+  
+      if (token && user?._id) {
+       
+        localStorage.setItem("authToken", token);
+        localStorage.setItem("userId", user._id);
+  
+        toast.success("Login successful!");
+        navigate("/");
       } else {
-        throw new Error('Invalid response: no token provided.');
+        throw new Error("Invalid response: Missing token or user ID.");
       }
     } catch (error) {
-      console.error('Login failed:', error);
-      toast.error('Invalid email or password. Please try again.');
+      console.error("Login failed:", error);
+      toast.error("Invalid email or password. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
+  
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
