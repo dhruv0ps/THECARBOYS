@@ -7,6 +7,8 @@ import { FaChevronLeft } from "react-icons/fa";
 
 import ObjectMultiSelectDropdown from "../../components/ObjectMultiSelectDropdown";
 import MakeDropdown from "../../util/MakeDropdown";
+import { leadApi } from "../../config/apiRoutes/leadApi";
+import { User } from "../../models/Lead";
 type Lead = {
   id: string;
   status: string;
@@ -34,7 +36,10 @@ type Lead = {
   dlstatus?:string;
   budgetFrom?:number;
   budgetTo?:number 
-  make? :string
+  make? :string;
+  createdDate?: string;
+  updatedDate?: string;
+  createdBy?: User;
 };
 
 const LeadForm: React.FC = () => {
@@ -109,6 +114,9 @@ const LeadForm: React.FC = () => {
       month: data.month ? data.month.slice(0, 7) : "",
       lastFollowUp: formatToDateInput(data.lastFollowUp),
       nextFollowUp: formatToDateInput(data.nextFollowUp),
+      createdDate: data.createdDate,
+      updatedDate: data.updatedDate,
+      createdBy: data.createdBy || null,
     });
     setSelectedMake(response.data.data.make)
       console.log(response.data)
@@ -162,14 +170,8 @@ const LeadForm: React.FC = () => {
           toast.error(errorMessage);
         }
       } else {
-        response = await axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/addlead`,
-          payload,
-          {
-            headers: { Authorization: `Bearer ${authToken}` }, // Add auth header
-          }
-        );
-        if (response.data.status === true || response.status === 201) {
+        response = await leadApi.addLead(payload)
+        if (response.status === true) {
           toast.success("Lead saved successfully");
           navigate("/leads/view");
           setLead({
@@ -224,10 +226,42 @@ const LeadForm: React.FC = () => {
   </div>
  
  <div className="max-w-4xl mx-auto p-8 bg-white rounded-lg shadow-lg border border-gray-200">
+ { id && (
+  <div className="flex justify-between items-center gap-4   rounded-lg">
+  
+    <div className="flex gap-4">
+      <div>
+        <label htmlFor="createdDate" className="text-gray-600">Created At:</label>
+        <p className="font-normal">
+          {lead.createdDate ? new Date(lead.createdDate).toLocaleString() : "N/A"}
+        </p>
+      </div>
+
+      <div>
+        <label htmlFor="updatedDate" className="text-gray-600">Updated At:</label>
+        <p className="font-normal">
+          {lead.updatedDate ? new Date(lead.updatedDate).toLocaleString() : "N/A"}
+        </p>
+      </div>
+    </div>
+
+    
+    <div>
+      <label htmlFor="createdBy" className="text-gray-600">Created By:</label>
+      <p className="font-normal">
+        {lead.createdBy?.username || "Admin"}
+      </p>
+    </div>
+  </div>
+)}
+
+
 
  
-<form onSubmit={handleSave} className="space-y-6">
-      <h2 className="text-2xl font-semibold text-center">Add New Lead</h2>
+<form onSubmit={handleSave} className="space-y-6 mt-4">
+<h2 className="text-2xl font-semibold text-center">
+  {id ? "Update Lead" : "Add New Lead"}
+</h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Status */}

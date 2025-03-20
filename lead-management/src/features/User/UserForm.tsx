@@ -42,7 +42,7 @@ export default function UserForm() {
       username: "",
       role: "",
       email: "",
-      password: id ? "" : undefined, // Undefined for new user, empty string for edit
+      password: id ? "" : undefined, 
     },
   });
 

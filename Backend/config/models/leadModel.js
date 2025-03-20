@@ -51,7 +51,7 @@ const leadSchema = new mongoose.Schema({
     
     },
     interestedModels: {
-        type: [String], // Array of strings for multi-select
+        type: [String], 
         default: [],
     },
     make:{
@@ -128,12 +128,16 @@ const leadSchema = new mongoose.Schema({
     isActive: {
         type: Boolean,
         default: true,
-    },
+    }, createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User", 
+        required: true,
+      },
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
 
 leadSchema.pre('save', function (next) {
     if (this.phoneNumber) {
-        this.phoneNumber = this.phoneNumber.replace(/[-]/g, ""); // Remove '+' and '-'
+        this.phoneNumber = this.phoneNumber.replace(/[-]/g, ""); 
     }
     next();
 });

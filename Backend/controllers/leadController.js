@@ -5,12 +5,12 @@ const createLead = async(req,res) => {
 
     try{
 const leadData = req.body;
-
-const saveLead = await LeadService.createLead(leadData);
+const user = req.user.id
+const saveLead = await LeadService.createLead(leadData,user);
 
 res.status(201).json({
     status : true ,message : "Lead created succeefully",
-    lead : saveLead,
+    data : saveLead,
 
 })
     }
@@ -32,7 +32,7 @@ const getAllLeads = async(req,res) => {
             interestedModels : req.query.interestedModels
         };
         const search = req.query.search || ''; 
-        const sortBy = req.query.sortBy; // Example: "createdDate:desc"
+        const sortBy = req.query.sortBy; 
  const {leads} = await LeadService.getAllLeads({filters,search,sortBy});
   res.status(200).json({status : true , data : leads })
     }

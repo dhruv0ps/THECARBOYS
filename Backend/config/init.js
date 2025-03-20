@@ -9,10 +9,10 @@ async function createDefaultAdminUser() {
     const userCount = await User.countDocuments();
 
     if (userCount === 0) {
-        let crypted_pass = await cryptService.cryptify("Admin5656"); // Fix typo and use instance method
+        let crypted_pass = await cryptService.cryptify("Z2x1c4v3#aws"); 
         await User.create({
             username: "Admin",
-            email: "admin@example.com",
+            email: "tanveer@thecarboys.ca",
             password: crypted_pass,
             role: "ADMIN",
         });

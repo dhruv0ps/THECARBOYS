@@ -1,7 +1,12 @@
-import './App.css';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { Provider } from 'mobx-react';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { authStore } from './store/authStore.ts';
 import LeadForm from './features/Leads/LeadForm';
 import AddNewCarForm from './features/Cars/CarFrom';
 import UserForm from './features/User/UserForm';
@@ -15,41 +20,41 @@ import LeadCategoryModal from './features/Leads/LeadCategoryModal';
 import InactiveLeads from './features/Leads/InActiveLeads';
 import Dashboard from './features/Dashboard/Dashboard';
 
+const stores = { authStore };
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: (
-      <ProtectedRoute> {/* Wrap Home in ProtectedRoute */}
+      <ProtectedRoute>
         <Home />
       </ProtectedRoute>
     ),
     children: [
       {
-        path:"/",
-        element:(
-<ProtectedRoute> 
-        <Dashboard />
-      </ProtectedRoute>
-        )
+        path: "/",
+        element: (
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/leads/add",
         element: (
-          <ProtectedRoute> {/* Wrap each child route in ProtectedRoute */}
-            <LeadForm  />
+          <ProtectedRoute>
+            <LeadForm />
           </ProtectedRoute>
         ),
       },
       {
         path: "/leads/add/:id",
         element: (
-          <ProtectedRoute> {/* Wrap each child route in ProtectedRoute */}
+          <ProtectedRoute>
             <LeadForm />
           </ProtectedRoute>
         ),
       },
-      
       {
         path: "/inventory/add",
         element: (
@@ -69,7 +74,7 @@ const router = createBrowserRouter([
       {
         path: "/leads/category",
         element: (
-          <ProtectedRoute> 
+          <ProtectedRoute>
             <LeadCategoryModal />
           </ProtectedRoute>
         ),
@@ -77,7 +82,7 @@ const router = createBrowserRouter([
       {
         path: "/leads/archive",
         element: (
-          <ProtectedRoute> 
+          <ProtectedRoute>
             <InactiveLeads />
           </ProtectedRoute>
         ),
@@ -122,7 +127,6 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-
       {
         path: "/users/view",
         element: (
@@ -143,15 +147,32 @@ const router = createBrowserRouter([
   },
 ]);
 
-// Main App component
 function App() {
   return (
     <>
-      {/* ToastContainer added here to make it available globally */}
-      <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} closeOnClick pauseOnFocusLoss draggable pauseOnHover />
+      {/* ToastContainer for global notifications */}
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
       <RouterProvider router={router} />
     </>
   );
 }
 
+// Render the app
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <Provider {...stores}>
+      <DndProvider backend={HTML5Backend}>
+        <App />
+      </DndProvider>
+    </Provider>
+  </React.StrictMode>
+);
 export default App;

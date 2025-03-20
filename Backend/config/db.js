@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 require('dotenv').config();
 
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/myProjectDB';
+// const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/myProjectDB';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/carboys';
 
 mongoose.connect(MONGO_URI);
 

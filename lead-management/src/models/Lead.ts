@@ -17,5 +17,11 @@ export type Lead = {
     _id : string
     isActive? : boolean
     interestedModels: string[];
+    createdBy?:User
   };
-  
+ export type User = {
+    _id: number;
+    username: string;
+    role: string;
+    email: string;
+  };

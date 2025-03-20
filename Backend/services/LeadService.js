@@ -18,7 +18,7 @@ const getNextLead = async() => {
     
 
 }
-const createLead = async(leadData) => {
+const createLead = async(leadData,user) => {
     try{
         if (leadData.leadCategories) {
       const categories = await Leadcategory.find({
@@ -42,15 +42,8 @@ const createLead = async(leadData) => {
 
         const leadId = await getNextLead();
 
-        const newLead = new Lead({ ...leadData,leadId});
+        const newLead = new Lead({ ...leadData,leadId,createdBy:user});
         const saveLead = await newLead.save();
-        // if (saveLead.phoneNumber) {
-        //   const message = `Hi ${saveLead.name}, thank you for your interest! Our team will contact you shortly. Your reference ID is ${saveLead.leadId}.`;
-          
-          
-        //   await twilioService.sendSMS(saveLead.phoneNumber, message);
-        // }
-    
       
         return saveLead;
 
@@ -92,7 +85,7 @@ const getAllLeads = async ({filters,search,sortBy}) => {
             sortCriteria[key] = order === 'desc' ? -1 : 1;
 
         }
-   const leads = await Lead.find(query).sort(sortCriteria);
+   const leads = await Lead.find(query).sort(sortCriteria).populate("createdBy");
 
         return { leads };
     } catch (error) {
@@ -103,7 +96,7 @@ const getAllLeads = async ({filters,search,sortBy}) => {
 
 const getSingleId = async(id) => {
   try {
-    const lead = await Lead.findById(id).populate("leadcategory")
+    const lead = await Lead.findById(id).populate("leadcategory").populate("createdBy")
     if(!lead) {
         throw new Error("Lead not found");
 
