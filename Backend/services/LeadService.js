@@ -245,7 +245,7 @@ const bulkLeads = async(data) => {
       try {
         const leadId = await getNextLead();
         
-        // Handle month logic - set 2025 for Jan, Feb, March and 2024 for other months
+        
         let monthDate = new Date();
         if (row["Month"]) {
           // Create a mapping of month abbreviations to their numeric values (0-based)
@@ -271,12 +271,12 @@ const bulkLeads = async(data) => {
             const parts = dateString.split('-');
             if (parts.length === 3) {
               const day = parseInt(parts[0], 10);
-              const month = parseInt(parts[1], 10) - 1; // Months are 0-indexed in JS
+              const month = parseInt(parts[1], 10) - 1; 
               const year = parseInt(parts[2], 10);
               return new Date(year, month, day);
             }
           } 
-          // Also handle slash format as a fallback
+        
           else if (dateString.includes('/')) {
             const parts = dateString.split('/');
             if (parts.length === 3) {
@@ -297,7 +297,7 @@ const bulkLeads = async(data) => {
           manager: row["Manager"] || "",
           name: row["Name"] || "Unknown",
           phoneNumber: row["Phone"] || "00000",
-          leadSource: row["Lead Source"] || "Unknown",
+          leadSource: row["Lead Source"] ? row["Lead Source"].trim() : "Unknown",
           interestedModels: row["Interested Models"] ? row["Interested Models"].split(",") : [],
           budget: parseFloat(row["Budget"]) || null,
           budgetFrom: parseFloat(row["Budget From"]) || null,

@@ -17,7 +17,7 @@ const leadSchema = new mongoose.Schema({
       
     status: {
         type: String,
-        enum: ["New", "Hot", "Cold", "Warm", "Lost", "Closed", "Pending Approval", "Timepass"],
+        enum: ["New", "Hot", "Cold", "Warm", "Lost", "Closed", "Pending Approval", "Timepass","Follow-up","Declined"],
         
     },
     month: {
@@ -39,7 +39,7 @@ const leadSchema = new mongoose.Schema({
     },
     phoneNumber: {
         type: String,
-        required: true,
+       
     },
     email: {
         type: String,
@@ -131,7 +131,7 @@ const leadSchema = new mongoose.Schema({
     }, createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User", 
-        required: true,
+        
       },
 }, { timestamps: { createdAt: 'createdDate', updatedAt: 'updatedDate' } });
 

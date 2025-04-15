@@ -279,6 +279,8 @@ const LeadForm: React.FC = () => {
             <option value="Lost">Lost</option>
             <option value="Closed">Closed</option>
             <option value="Pending Approval">Pending Approval</option>
+            <option value="Follow-up">Follow-up</option>
+            <option value="Declined">Declined</option>
           </Select>
         </div>
 

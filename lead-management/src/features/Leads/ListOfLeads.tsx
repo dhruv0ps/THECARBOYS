@@ -289,14 +289,14 @@ const ListOfLeads: React.FC = () => {
             </div>
           </div>
           <h2 className="text-3xl flex justify-center" style={{ marginBottom: "20px" }}>
-            List of Leads 
+            List of Leads
           </h2>
           <div className="flex justify-end">
-  <div className="bg-black text-white px-2 py-2 w-40 rounded-lg text-lg font-medium text-center">
-    Total Leads: <span className="font-bold">{totalLeads}</span>
-  </div>
-</div>
-      
+            <div className="bg-black text-white px-2 py-2 w-40 rounded-lg text-lg font-medium text-center">
+              Total Leads: <span className="font-bold">{totalLeads}</span>
+            </div>
+          </div>
+
 
           {/* Search and Filter Controls */}
           <div
@@ -345,6 +345,8 @@ const ListOfLeads: React.FC = () => {
                 <option value="Lost">Lost</option>
                 <option value="Closed">Closed</option>
                 <option value="Pending Approval">Pending Approval</option>
+                <option value="Follow-up">Follow-up</option>
+                <option value="Declined">Declined</option>
               </select>
             </div>
 
@@ -551,6 +553,8 @@ const ListOfLeads: React.FC = () => {
                           <option value="Closed">Closed</option>
                           <option value="Pending Approval">Pending Approval</option>
                           <option value="Timepass">Timepass</option>
+                          <option value="Follow-up">Follow-up</option>
+                          <option value="Declined">Declined</option>
                         </select>
                       </TableCell>
                       <TableCell>{lead.manager}</TableCell>

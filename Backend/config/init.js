@@ -4,6 +4,7 @@ const User = require("../config/models/userModel");
 const CryptService = require("../services/crypt-service");
 const cryptService = new CryptService(); 
 const Lead = require("../config/models/leadModel");
+const Counter = require("../config/models/counterModel")
 
 async function createDefaultAdminUser() {
     const userCount = await User.countDocuments();
@@ -29,10 +30,22 @@ async function clearAllLeads() {
         throw error;
     }
 }
+async function clearAllCounters() {
+    try {
+        const result = await Counter.deleteMany({});
+        console.log(`All counters deleted: ${result.deletedCount} counters removed`);
+        return result;
+    } catch (error) {
+        console.error("Error clearing all counters:", error);
+        throw error;
+    }
+}
+
 async function _init_methods() {
     try {
         await createDefaultAdminUser();
         // await clearAllLeads();
+        // await clearAllCounters();
     } catch (error) {
         console.log("Something went wrong", error);
     }
