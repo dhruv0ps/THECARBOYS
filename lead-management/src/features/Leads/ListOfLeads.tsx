@@ -26,6 +26,7 @@ import UploadLead from "./upload-lead"
 import type { Lead } from "../../models/Lead"
 import { observer } from 'mobx-react'
 import { authStore } from '../../store/authStore'
+import { MdMail } from "react-icons/md"
 
 const ListOfLeads: React.FC = () => {
   const [leads, setLeads] = useState<Lead[]>([])
@@ -258,7 +259,7 @@ const ListOfLeads: React.FC = () => {
     if (sortField === field) {
       return sortOrder === "asc" ? <ArrowDropUp fontSize="small" /> : <ArrowDropDown fontSize="small" />
     }
-    return <ArrowDropUp fontSize="small" style={{ color: "white", opacity: 1 }} />
+    return <ArrowDropUp fontSize="small" className="text-white opacity-100" />
   }
 
   const toggleUploadLead = () => {
@@ -346,8 +347,7 @@ const ListOfLeads: React.FC = () => {
                 <Button
                   variant="contained"
                   startIcon={<FileDownload />}
-                  className="bg-black hover:bg-gray-800 normal-case"
-                  style={{ backgroundColor: "#000", borderRadius: "6px" }}
+                  className="bg-black hover:bg-gray-800 normal-case rounded-md"
                   onClick={exportLeadsToCSV}
                 >
                   Export
@@ -356,24 +356,21 @@ const ListOfLeads: React.FC = () => {
               <Button
                 variant="contained"
                 startIcon={<UploadFile />}
-                className="bg-black hover:bg-gray-800 normal-case"
-                style={{ backgroundColor: "#000", borderRadius: "6px" }}
+                className="bg-black hover:bg-gray-800 normal-case rounded-md"
                 onClick={toggleUploadLead}
               >
                 Upload
               </Button>
               <Button
                 variant="contained"
-                className="bg-black hover:bg-gray-800 normal-case"
-                style={{ backgroundColor: "#000", borderRadius: "6px" }}
+                className="bg-black hover:bg-gray-800 normal-case rounded-md"
                 onClick={toggleBulkModal}
               >
                 Bulk Update
               </Button>
               <Button
                 variant="contained"
-                className="bg-black hover:bg-gray-800 normal-case"
-                style={{ backgroundColor: "#000", borderRadius: "6px" }}
+                className="bg-black hover:bg-gray-800 normal-case rounded-md"
                 onClick={() => navigate("/leads/add")}
               >
                 Add Lead
@@ -411,7 +408,6 @@ const ListOfLeads: React.FC = () => {
                 startIcon={<FilterList />}
                 onClick={toggleFilters}
                 className="border-gray-300 text-gray-700"
-                style={{ borderColor: "#e5e7eb", color: "#374151" }}
               >
                 Filters
               </Button>
@@ -490,28 +486,28 @@ const ListOfLeads: React.FC = () => {
           {/* Table Section */}
           {isLoading ? (
             <div className="flex justify-center items-center py-20">
-              <CircularProgress style={{ color: "black" }} />
+              <CircularProgress className="text-black" />
             </div>
           ) : (
             <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-100">
               <div className="overflow-x-auto">
-                <TableContainer component={Paper} elevation={0} style={{ border: "none" }}>
+                <TableContainer component={Paper} elevation={0} className="border-none">
                   <Table stickyHeader>
                     <TableHead>
                       <TableRow>
-                        <TableCell padding="checkbox" style={{ backgroundColor: "#f9fafb" }}>
+                        <TableCell padding="checkbox" className="bg-gray-50">
                           <Checkbox
                             indeterminate={selectedLeadIds.length > 0 && selectedLeadIds.length < leads.length}
                             checked={selectedLeadIds.length === leads.length && leads.length > 0}
                             onChange={handleSelectAllLeads}
-                            style={{ color: selectedLeadIds.length > 0 ? "black" : undefined }}
+                            className={selectedLeadIds.length > 0 ? "text-black" : ""}
                           />
                         </TableCell>
-                        <TableCell style={{ backgroundColor: "#f9fafb", fontWeight: "600" }}>
+                        <TableCell className="bg-gray-50 text-nowrap font-semibold">
                           Actions
                         </TableCell>
                         <TableCell 
-                          style={{ backgroundColor: "#f9fafb", fontWeight: "600", cursor: "pointer" }}
+                          className="bg-gray-50 text-nowrap font-semibold cursor-pointer"
                           onClick={() => handleSort("name")}
                         >
                           <div className="flex items-center">
@@ -519,7 +515,7 @@ const ListOfLeads: React.FC = () => {
                           </div>
                         </TableCell>
                         <TableCell 
-                          style={{ backgroundColor: "#f9fafb", fontWeight: "600", cursor: "pointer" }}
+                          className="bg-gray-50 text-nowrap font-semibold cursor-pointer"
                           onClick={() => handleSort("nextFollowUp")}
                         >
                           <div className="flex items-center">
@@ -527,7 +523,7 @@ const ListOfLeads: React.FC = () => {
                           </div>
                         </TableCell>
                         <TableCell 
-                          style={{ backgroundColor: "#f9fafb", fontWeight: "600", cursor: "pointer" }}
+                          className="bg-gray-50 text-nowrap font-semibold cursor-pointer"
                           onClick={() => handleSort("lastFollowUp")}
                         >
                           <div className="flex items-center">
@@ -535,27 +531,27 @@ const ListOfLeads: React.FC = () => {
                           </div>
                         </TableCell>
                         <TableCell
-                          style={{ backgroundColor: "#f9fafb", fontWeight: "600", cursor: "pointer" }}
+                          className="bg-gray-50 text-nowrap font-semibold cursor-pointer"
                           onClick={() => handleSort("status")}
                         >
                           <div className="flex items-center">
                             Status {getSortIcon("status")}
                           </div>
                         </TableCell>
-                        <TableCell style={{ backgroundColor: "#f9fafb", fontWeight: "600" }}>
+                        <TableCell className="bg-gray-50 text-nowrap font-semibold">
                           Manager
                         </TableCell>
-                        <TableCell style={{ backgroundColor: "#f9fafb", fontWeight: "600" }}>
+                        <TableCell className="bg-gray-50 text-nowrap font-semibold">
                           Phone
                         </TableCell>
-                        <TableCell style={{ backgroundColor: "#f9fafb", fontWeight: "600" }}>
+                        <TableCell className="bg-gray-50 text-nowrap font-semibold">
                           Source
                         </TableCell>
-                        <TableCell style={{ backgroundColor: "#f9fafb", fontWeight: "600" }}>
+                        <TableCell className="bg-gray-50 text-nowrap font-semibold">
                           Models
                         </TableCell>
                         <TableCell 
-                          style={{ backgroundColor: "#f9fafb", fontWeight: "600", cursor: "pointer" }}
+                          className="bg-gray-50 text-nowrap font-semibold cursor-pointer"
                           onClick={() => handleSort("createdDate")}
                         >
                           <div className="flex items-center">
@@ -563,7 +559,7 @@ const ListOfLeads: React.FC = () => {
                           </div>
                         </TableCell>
                         <TableCell 
-                          style={{ backgroundColor: "#f9fafb", fontWeight: "600", cursor: "pointer" }}
+                          className="bg-gray-50 text-nowrap font-semibold cursor-pointer"
                           onClick={() => handleSort("createdBy")}
                         >
                           <div className="flex items-center">
@@ -587,14 +583,13 @@ const ListOfLeads: React.FC = () => {
                               />
                             </TableCell>
                             <TableCell>
-                              <div className="flex flex-wrap gap-1 md:gap-2">
+                              <div className="flex gap-1">
                                 <IconButton
                                   size="small"
-                                  className="bg-blue-50 hover:bg-blue-100"
-                                  style={{ backgroundColor: "#eff6ff", color: "#1d4ed8" }}
+                                  className="bg-blue-50 hover:bg-blue-100 text-blue-700"
                                   onClick={() => openModal(lead._id!)}
                                 >
-                                  SMS
+                                  <MdMail fontSize="small" />
                                 </IconButton>
                                 <IconButton
                                   size="small"
@@ -605,8 +600,7 @@ const ListOfLeads: React.FC = () => {
                                 </IconButton>
                                 <IconButton
                                   size="small"
-                                  className="hover:bg-red-50"
-                                  style={{ color: "#ef4444" }}
+                                  className="hover:bg-red-50 text-red-500"
                                   onClick={() => handleDelete(lead._id!)}
                                 >
                                   <Delete fontSize="small" />
