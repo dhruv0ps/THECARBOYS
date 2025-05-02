@@ -6,6 +6,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import { HiEye, HiEyeOff } from "react-icons/hi";
 import { FaChevronLeft } from 'react-icons/fa';
+import { observer } from 'mobx-react';
+import { authStore } from '../../store/authStore';
 
 import * as z from "zod";
 import axios from "axios";
@@ -24,7 +26,7 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export default function UserForm() {
+const UserForm = () => {
   const { id } = useParams<{ id: string }>();
   const [showPassword, setShowPassword] = useState(false);
   const [updatePassword, setUpdatePassword] = useState(false);
@@ -47,10 +49,33 @@ export default function UserForm() {
   });
 
   useEffect(() => {
-    if (id) {
+    // Check if user is admin
+    checkAdminAccess();
+  }, []);
+
+  useEffect(() => {
+    if (id && authStore.user?.email?.includes('admin')) {
       fetchUserData(id);
     }
-  }, [id]);
+  }, [id, authStore.user]);
+
+  const checkAdminAccess = async () => {
+    try {
+      // If user is not authenticated yet, getCurrentUser will handle it
+      if (!authStore.user) {
+        await authStore.getCurrentUser();
+      }
+      
+      // Check if user email contains 'admin' to determine admin status
+      if (!authStore.user?.email?.includes('admin')) {
+        toast.error("You don't have permission to access this page");
+        navigate('/');
+      }
+    } catch (error) {
+      console.error("Error checking admin access:", error);
+      navigate('/');
+    }
+  };
 
   const fetchUserData = async (userId: string) => {
     try {
@@ -67,11 +92,18 @@ export default function UserForm() {
       });
 
       const { username, role, email } = response.data.data;
+      
+      // Prevent editing admin users
+      if (email.includes('admin')) {
+        toast.error("Admin users cannot be edited.");
+        navigate("/users/view");
+        return;
+      }
 
       setValue("username", username);
       setValue("role", role);
       setValue("email", email);
-      setValue("password", ""); // Reset password field when editing
+      setValue("password", ""); 
     } catch (error) {
       console.error("Error fetching user data:", error);
       toast.error("Failed to load user data.");
@@ -162,8 +194,9 @@ export default function UserForm() {
           <Label htmlFor="role" value="Role" />
           <Select id="role" {...register("role")} color={errors.role ? "failure" : "default"}>
             <option value="">Select a role</option>
-            <option value="ADMIN">Admin</option>
-           
+            <option value="User">User</option>
+            <option value="Associate1">Associate1</option>
+            <option value="Associate2">Associate2</option>
           </Select>
           {errors.role && <p className="mt-2 text-sm text-red-600">{errors.role.message}</p>}
         </div>
@@ -225,3 +258,5 @@ export default function UserForm() {
     </div></>
   );
 }
+
+export default observer(UserForm);

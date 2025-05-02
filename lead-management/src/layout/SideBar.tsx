@@ -6,6 +6,8 @@ import { HiChartBar } from 'react-icons/hi';
 import { Link, useLocation } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import "./NavSideBar.css"; // Import CSS file
+import { observer } from 'mobx-react';
+import { authStore } from '../store/authStore';
 
 type NavSideBarProps = {
     isSidebarOpen: boolean;
@@ -81,6 +83,7 @@ const renderChevronIcon = (theme: any, open: boolean) => {
 
 const NavSideBar: React.FC<NavSideBarProps> = ({ isSidebarOpen }) => {
     const location = useLocation();
+    const isAdmin = authStore.user?.role === 'ADMIN';
 
     return (
         <Sidebar
@@ -129,14 +132,14 @@ const NavSideBar: React.FC<NavSideBarProps> = ({ isSidebarOpen }) => {
                             to="/leads/archive"
                             className={location.pathname === "/leads/archive" ? "sidebar-item-active" : "sidebar-item"}
                         >
-                             Lead Archive
+                            Lead Archive
                         </Sidebar.Item>
                         <Sidebar.Item
                             as={Link}
                             to="/leads/category"
                             className={location.pathname === "/leads/category" ? "sidebar-item-active" : "sidebar-item"}
                         >
-                             Leads Categories
+                            Leads Categories
                         </Sidebar.Item>
                     </Sidebar.Collapse>
 
@@ -163,32 +166,34 @@ const NavSideBar: React.FC<NavSideBarProps> = ({ isSidebarOpen }) => {
                         </Sidebar.Item>
                     </Sidebar.Collapse>
 
-                    {/* Users Section */}
-                    <Sidebar.Collapse
-                        icon={FaUsers}
-                        label="Users"
-                        renderChevronIcon={(theme, open) => renderChevronIcon(theme, open)}
-                        aria-expanded={isSidebarOpen}
-                    >
-                        <Sidebar.Item
-                            as={Link}
-                            to="/users/view"
-                            className={location.pathname === "/users/view" ? "sidebar-item-active" : "sidebar-item"}
+                    {/* Users Section - Only visible to admins */}
+                    {isAdmin && (
+                        <Sidebar.Collapse
+                            icon={FaUsers}
+                            label="Users"
+                            renderChevronIcon={(theme, open) => renderChevronIcon(theme, open)}
+                            aria-expanded={isSidebarOpen}
                         >
-                            View Users
-                        </Sidebar.Item>
-                        <Sidebar.Item
-                            as={Link}
-                            to="/users/add"
-                            className={location.pathname === "/users/add" ? "sidebar-item-active" : "sidebar-item"}
-                        >
-                            Add Users
-                        </Sidebar.Item>
-                    </Sidebar.Collapse>
+                            <Sidebar.Item
+                                as={Link}
+                                to="/users/view"
+                                className={location.pathname === "/users/view" ? "sidebar-item-active" : "sidebar-item"}
+                            >
+                                View Users
+                            </Sidebar.Item>
+                            <Sidebar.Item
+                                as={Link}
+                                to="/users/add"
+                                className={location.pathname === "/users/add" ? "sidebar-item-active" : "sidebar-item"}
+                            >
+                                Add Users
+                            </Sidebar.Item>
+                        </Sidebar.Collapse>
+                    )}
                 </Sidebar.ItemGroup>
             </Sidebar.Items>
         </Sidebar>
     );
 };
 
-export default NavSideBar;
+export default observer(NavSideBar);

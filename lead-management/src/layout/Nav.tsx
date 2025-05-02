@@ -1,10 +1,11 @@
-import { FC, useEffect, useState } from "react";
-import axios from "axios";
+import { FC } from "react";
 import { Dropdown, Navbar } from "flowbite-react";
 import { HiLogout } from "react-icons/hi";
 import { MdMenu, MdMenuOpen } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/Logo.png";
+import { observer } from 'mobx-react';
+import { authStore } from '../store/authStore';
 
 interface NavBarProps {
   toggleSidebar: () => void;
@@ -13,42 +14,9 @@ interface NavBarProps {
 
 const NavBar: FC<NavBarProps> = ({ toggleSidebar, isSidebarOpen }) => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<{ username?: string; email?: string }>({});
-  const [loading, setLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const token = localStorage.getItem("authToken");
-        const userId = localStorage.getItem("userId");
-
-        if (!token || !userId) {
-          navigate("/login");
-          return;
-        }
-
-        const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/user/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        setUser(response.data.data);
-        console.log(response.data)
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("userId");
-        navigate("/login");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUser();
-  }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userId");
+  const handleLogout = async () => {
+    await authStore.logout();
     navigate("/login");
   };
 
@@ -68,7 +36,7 @@ const NavBar: FC<NavBarProps> = ({ toggleSidebar, isSidebarOpen }) => {
             inline
             label={
               <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center relative overflow-hidden">
-                {loading ? (
+                {authStore.loading ? (
                   <span className="text-sm text-gray-500">Loading...</span>
                 ) : (
                   <svg
@@ -89,10 +57,10 @@ const NavBar: FC<NavBarProps> = ({ toggleSidebar, isSidebarOpen }) => {
           >
             <Dropdown.Header>
               <span className="block text-base font-medium text-gray-800">
-                {user.username || "User"}
+                {authStore.user?.username || "User"}
               </span>
               <span className="block truncate text-sm text-gray-500">
-                {user.email || "user@example.com"}
+                {authStore.user?.email || "user@example.com"}
               </span>
             </Dropdown.Header>
             <Dropdown.Divider />
@@ -123,4 +91,4 @@ const NavBar: FC<NavBarProps> = ({ toggleSidebar, isSidebarOpen }) => {
   );
 };
 
-export default NavBar;
+export default observer(NavBar);

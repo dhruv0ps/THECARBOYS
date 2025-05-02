@@ -12,5 +12,5 @@ export const apiUrl = {
     currentUser: `${base}/current`,
     register: `${base}/register`,
     logout: `${base}/logout`,
- addlead : `${base}/addlead`   
+    addlead: `${base}/addlead`
 }

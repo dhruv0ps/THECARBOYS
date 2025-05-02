@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button as FlowbiteButton, Card as FlowbiteCard } from 'flowbite-react';
 import { AiOutlineMail, AiOutlineLock, AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
-import axios from 'axios';
 import { toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { authStore } from '../../store/authStore';
 
 const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -18,25 +18,8 @@ const LoginPage: React.FC = () => {
     setIsLoading(true);
   
     try {
-      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/loginUser`, {
-        email,
-        password,
-      });
-  
-      console.log(response.data);
-  
-      const { user, token } = response.data.data; 
-  
-      if (token && user?._id) {
-       
-        localStorage.setItem("authToken", token);
-        localStorage.setItem("userId", user._id);
-  
-        toast.success("Login successful!");
-        navigate("/");
-      } else {
-        throw new Error("Invalid response: Missing token or user ID.");
-      }
+      await authStore.login(email, password);
+      navigate('/');
     } catch (error) {
       console.error("Login failed:", error);
       toast.error("Invalid email or password. Please try again.");

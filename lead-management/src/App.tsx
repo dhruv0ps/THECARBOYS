@@ -1,9 +1,8 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
 import { Provider } from 'mobx-react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { authStore } from './store/authStore.ts';
@@ -21,6 +20,34 @@ import InactiveLeads from './features/Leads/InActiveLeads';
 import Dashboard from './features/Dashboard/Dashboard';
 
 const stores = { authStore };
+
+// Admin-only protected route component
+const AdminRoute = ({ children }: { children: React.ReactNode }) => {
+  const [isAdmin, setIsAdmin] = React.useState<boolean | null>(null);
+
+  React.useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        if (!authStore.user) {
+          await authStore.getCurrentUser();
+        }
+        
+        setIsAdmin(authStore.user?.email?.includes('admin') || false);
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+        setIsAdmin(false);
+      }
+    };
+    
+    checkAdmin();
+  }, []);
+
+  if (isAdmin === null) {
+    return null;
+  }
+
+  return isAdmin ? <>{children}</> : <Navigate to="/" />;
+};
 
 const router = createBrowserRouter([
   {
@@ -91,7 +118,9 @@ const router = createBrowserRouter([
         path: "/users/add",
         element: (
           <ProtectedRoute>
-            <UserForm />
+            <AdminRoute>
+              <UserForm />
+            </AdminRoute>
           </ProtectedRoute>
         ),
       },
@@ -99,7 +128,9 @@ const router = createBrowserRouter([
         path: "/users/:id",
         element: (
           <ProtectedRoute>
-            <UserForm />
+            <AdminRoute>
+              <UserForm />
+            </AdminRoute>
           </ProtectedRoute>
         ),
       },
@@ -131,7 +162,9 @@ const router = createBrowserRouter([
         path: "/users/view",
         element: (
           <ProtectedRoute>
-            <UserTable />
+            <AdminRoute>
+              <UserTable />
+            </AdminRoute>
           </ProtectedRoute>
         ),
       },
@@ -149,30 +182,24 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <>
-      {/* ToastContainer for global notifications */}
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        closeOnClick
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
-      <RouterProvider router={router} />
-    </>
+    <Provider {...stores}>
+      <DndProvider backend={HTML5Backend}>
+        <>
+          {/* ToastContainer for global notifications */}
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            closeOnClick
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+          />
+          <RouterProvider router={router} />
+        </>
+      </DndProvider>
+    </Provider>
   );
 }
 
-// Render the app
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <Provider {...stores}>
-      <DndProvider backend={HTML5Backend}>
-        <App />
-      </DndProvider>
-    </Provider>
-  </React.StrictMode>
-);
 export default App;

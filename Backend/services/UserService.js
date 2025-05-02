@@ -19,7 +19,6 @@ const useServices = {
 async function _add_user_by_email(email, pass) {
     return new Promise(async (resolve, reject) => {
         let crypted_pass = await cryptService.cryptify(pass)
-        console.log(crypted_pass)
 
         User.create({
             email: email,
@@ -33,8 +32,7 @@ async function _add_user_by_email(email, pass) {
 
 async function _login_user_by_email(email, pass) {
     return new Promise(async (resolve, reject) => {
-        let data = await User.find({ email: { $regex: new RegExp(`^${email}$`, 'i') } })
-        let user = data[0]
+        const user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } })
         if (!user)
             return reject("Invalid credentials.")
         const match = await cryptService.verify(pass, user.password)

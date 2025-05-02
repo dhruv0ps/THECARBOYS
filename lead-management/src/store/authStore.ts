@@ -6,8 +6,7 @@ interface User {
     username: string;
     email: string;
     password?: string;
-    firstname?: string;
-    lastname?: string;
+    role?: string;
 }
 
 class AuthStore {
@@ -36,19 +35,14 @@ class AuthStore {
         }
     }
 
-    login = async (username: string, password: string) => {
+    login = async (email: string, password: string) => {
         try {
-            const response = await authApis.postLogin({ email: username, password });
-
+            const response = await authApis.postLogin({ email, password });
+            const { user, token } = response.data;
             runInAction(() => {
-                this.setUser({
-                    _id: response.data.user._id,
-                    username: response.data.user.username,
-                    email: response.data.user.email,
-                    firstname: response.data.user.firstname,
-                    lastname: response.data.user.lastname,
-                }); // No role & permissions
-                this.setAuthToken(response.data.authToken);
+                this.setUser(user);
+                this.setAuthToken(token);
+                localStorage.setItem('authToken', token);
             });
         } catch (error) {
             console.error('Login failed:', error);
@@ -69,8 +63,7 @@ class AuthStore {
                     _id: response.data._id,
                     username: response.data.username,
                     email: response.data.email,
-                    firstname: response.data.firstname,
-                    lastname: response.data.lastname,
+                    role: response.data.role,
                 });
             });
         } catch (error) {
