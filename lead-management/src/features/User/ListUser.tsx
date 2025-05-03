@@ -34,7 +34,6 @@ const UserTable: React.FC = () => {
   const authToken = localStorage.getItem("authToken");
 
   useEffect(() => {
-    // Check if user is admin
     checkAdminAccess();
   }, []);
 
@@ -54,7 +53,7 @@ const UserTable: React.FC = () => {
         await authStore.getCurrentUser();
       }
 
-      if (!authStore.user?.email?.includes('admin')) {
+      if (authStore.user?.role !== 'ADMIN') {
         toast.error("You don't have permission to access this page");
         navigate('/');
       }
@@ -71,7 +70,7 @@ const UserTable: React.FC = () => {
         headers: { Authorization: `Bearer ${authToken}` }
       });
       const filteredData = response.data.data.filter(
-        (user: User) => !user.email.includes('admin@example.com')
+        (user: User) => user.role !== 'ADMIN'
       );
       setUsers(filteredData);
     } catch (error) {

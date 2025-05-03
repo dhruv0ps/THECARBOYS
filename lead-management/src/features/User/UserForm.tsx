@@ -54,20 +54,18 @@ const UserForm = () => {
   }, []);
 
   useEffect(() => {
-    if (id && authStore.user?.email?.includes('admin')) {
+    if (id && authStore.user?.role === 'ADMIN') {
       fetchUserData(id);
     }
   }, [id, authStore.user]);
 
   const checkAdminAccess = async () => {
     try {
-      // If user is not authenticated yet, getCurrentUser will handle it
       if (!authStore.user) {
         await authStore.getCurrentUser();
       }
       
-      // Check if user email contains 'admin' to determine admin status
-      if (!authStore.user?.email?.includes('admin')) {
+      if (authStore.user?.role !== 'ADMIN') {
         toast.error("You don't have permission to access this page");
         navigate('/');
       }
@@ -93,8 +91,8 @@ const UserForm = () => {
 
       const { username, role, email } = response.data.data;
       
-      // Prevent editing admin users
-      if (email.includes('admin')) {
+      
+      if (role === 'ADMIN') {
         toast.error("Admin users cannot be edited.");
         navigate("/users/view");
         return;
