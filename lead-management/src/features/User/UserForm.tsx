@@ -48,10 +48,6 @@ const UserForm = () => {
     },
   });
 
-  useEffect(() => {
-    // Check if user is admin
-    checkAdminAccess();
-  }, []);
 
   useEffect(() => {
     if (id && authStore.user?.role === 'ADMIN') {
@@ -59,21 +55,6 @@ const UserForm = () => {
     }
   }, [id, authStore.user]);
 
-  const checkAdminAccess = async () => {
-    try {
-      if (!authStore.user) {
-        await authStore.getCurrentUser();
-      }
-      
-      if (authStore.user?.role !== 'ADMIN') {
-        toast.error("You don't have permission to access this page");
-        navigate('/');
-      }
-    } catch (error) {
-      console.error("Error checking admin access:", error);
-      navigate('/');
-    }
-  };
 
   const fetchUserData = async (userId: string) => {
     try {

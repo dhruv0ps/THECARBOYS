@@ -32,11 +32,7 @@ const UserTable: React.FC = () => {
   const rowsPerPage = 5;
 
   const authToken = localStorage.getItem("authToken");
-
-  useEffect(() => {
-    checkAdminAccess();
-  }, []);
-
+  
   useEffect(() => {
     if (authStore.user?.email) {
       fetchUsers();
@@ -46,22 +42,6 @@ const UserTable: React.FC = () => {
   useEffect(() => {
     filterAndSortUsers();
   }, [users, searchQuery, roleFilter, sortField, sortOrder]);
-
-  const checkAdminAccess = async () => {
-    try {
-      if (!authStore.user) {
-        await authStore.getCurrentUser();
-      }
-
-      if (authStore.user?.role !== 'ADMIN') {
-        toast.error("You don't have permission to access this page");
-        navigate('/');
-      }
-    } catch (error) {
-      console.error("Error checking admin access:", error);
-      navigate('/');
-    }
-  };
 
   const fetchUsers = async () => {
     setLoading(true);
